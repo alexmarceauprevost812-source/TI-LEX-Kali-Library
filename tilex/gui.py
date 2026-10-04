@@ -10,6 +10,7 @@ from .icons import find_icon, tool_emoji, refresh
 from .manuals import read_manual, options_from_manual
 from .storage import Store
 from .system import information
+from .artwork import pictogram
 
 BG = '#090d10'
 SURFACE = '#121a20'
@@ -62,7 +63,7 @@ class CatalogGUI:
         self.request = 0
         self.closed = False
         root.title('TI-LEX-KALI Library V3')
-        root.geometry('1440x860')
+        root.geometry('1640x940')
         root.minsize(1050, 680)
         root.configure(bg=BG)
         root.protocol('WM_DELETE_WINDOW', self.close)
@@ -74,11 +75,11 @@ class CatalogGUI:
 
     def label(self, parent, text, fg=WHITE, size=11, **kwargs):
         return tk.Label(parent, text=text, bg=kwargs.pop('bg', BG), fg=fg,
-                        font=('DejaVu Sans', size), **kwargs)
+                        font=kwargs.pop('font', ('DejaVu Sans', size)), **kwargs)
 
     def button(self, parent, text, action, bg=PANEL, fg=WHITE, **kwargs):
         return tk.Button(parent, text=text, command=action, bg=bg, fg=fg,
-                         activebackground=BLUE, activeforeground=BG, relief='flat',
+                         activebackground=BLUE, activeforeground=BG, relief='flat', borderwidth=0, highlightthickness=0,
                          font=('DejaVu Sans', 10), cursor='hand2', padx=10, pady=7, **kwargs)
 
     def build(self):
@@ -86,17 +87,29 @@ class CatalogGUI:
         top.pack(fill='x')
         brand = tk.Frame(top, bg=SURFACE)
         brand.pack(side='left', padx=(0, 20))
+        brand_line = tk.Frame(brand, bg=SURFACE)
+        brand_line.pack(anchor='w')
         for text, color in (('TI-L', ORANGE), ('EX', WHITE)):
-            self.label(brand, text, color, 25, bg=SURFACE).pack(side='left')
-        self.label(brand, '  🐉  V3', ORANGE, 13, bg=SURFACE).pack(side='left')
+            self.label(brand_line, text, color, 30, bg=SURFACE, font=('DejaVu Sans', 30, 'bold')).pack(side='left')
+        self.label(brand_line, ' 🐉', ORANGE, 22, bg=SURFACE).pack(side='left')
+        self.label(brand, 'KALI LIBRARY  V3', WHITE, 11, bg=SURFACE).pack(anchor='w')
         self.query = tk.StringVar()
         entry = tk.Entry(top, textvariable=self.query, bg=PANEL, fg=WHITE,
-                         insertbackground=WHITE, relief='flat', width=25, font=('DejaVu Sans', 11))
+                         insertbackground=WHITE, relief='flat', borderwidth=0, highlightthickness=1, highlightbackground='#303d46', width=26, font=('DejaVu Sans', 11))
         entry.pack(side='left', padx=10, ipady=10)
-        self.query.trace_add('write', lambda *args: self.changed_filter())
-        self.label(top, 'Recherche', MUTED, 9, bg=SURFACE).pack(side='left')
+        search_hint = self.label(entry, 'Rechercher un outil…', MUTED, 10, bg=PANEL)
+        search_hint.place(x=10, y=5)
+        search_hint.bind('<Button-1>', lambda e: entry.focus_set())
+        def search_changed(*args):
+            search_hint.place_forget() if self.query.get() else search_hint.place(x=10, y=5)
+            self.changed_filter()
+        self.query.trace_add('write', search_changed)
+        self.label(top, '⌕', MUTED, 17, bg=SURFACE).pack(side='left')
+        self.mode_buttons = {}
         for mode in ('Bibliothèque', 'Top 10', 'Favoris ★'):
-            self.button(top, mode, lambda m=mode: self.set_mode(m)).pack(side='left', padx=3)
+            button = self.button(top, mode, lambda m=mode: self.set_mode(m), bg=SURFACE, fg=ORANGE if mode == 'Bibliothèque' else WHITE)
+            button.pack(side='left', padx=5)
+            self.mode_buttons[mode] = button
         self.button(top, 'Laboratoire', self.laboratory).pack(side='left', padx=3)
         self.button(top, 'Actualiser', self.refresh_catalog).pack(side='right')
         body = tk.Frame(self.root, bg=BG)
@@ -111,8 +124,8 @@ class CatalogGUI:
         for i, category in enumerate(CATEGORIES, 1):
             row = tk.Frame(sidebar, bg=SURFACE)
             row.pack(fill='x', pady=1)
-            self.label(row, f'{i:02}', RED, 10, bg=SURFACE).pack(side='left')
-            short = category.split(' — ')[0]
+            self.label(row, f'{i:02}', WHITE, 10, bg=RED, padx=5, pady=3).pack(side='left', padx=(0, 7))
+            short = ('Réseau', 'Trafic réseau', 'Wi-Fi', 'Web', 'Ports et services', 'Vulnérabilités', 'Mots de passe', 'Forensique', 'Fichiers', 'Analyse de malware', 'Système', 'Journaux', 'Développement', 'Bases de données', 'Sauvegarde', 'Autres outils')[i - 1]
             button = self.button(row, short, lambda c=category: self.set_category(c), bg=SURFACE, anchor='w')
             button.pack(side='left', fill='x', expand=True)
             self.category_buttons.append((category, button))
@@ -123,7 +136,7 @@ class CatalogGUI:
                        activebackground=SURFACE, activeforeground=WHITE).pack(anchor='w')
         center = tk.Frame(body, bg=BG, padx=15, pady=12)
         center.grid(row=0, column=1, sticky='nsew')
-        self.heading = self.label(center, 'Vos outils', size=21)
+        self.heading = self.label(center, 'Vos outils', size=25, font=('DejaVu Sans', 25, 'bold'))
         self.heading.pack(anchor='w')
         self.status = self.label(center, 'Chargement des outils locaux…', MUTED, 10)
         self.status.pack(anchor='w', pady=8)
@@ -137,8 +150,14 @@ class CatalogGUI:
         self.button(navigation, 'Suivant →', lambda: self.move_page(1)).pack(side='right')
         right = tk.Frame(body, bg=SURFACE, padx=18, pady=18)
         right.grid(row=0, column=2, sticky='nsew')
-        self.detail = self.label(right, 'Choisissez un outil', BLUE, 22, bg=SURFACE, anchor='w')
-        self.detail.pack(fill='x')
+        title_row = tk.Frame(right, bg=SURFACE)
+        title_row.pack(fill='x', pady=10)
+        self.detail_icon_host = tk.Frame(title_row, bg=SURFACE)
+        self.detail_icon_host.pack(side='left', padx=(0, 12))
+        self.detail = self.label(title_row, 'Choisissez un outil', WHITE, 25, bg=SURFACE,
+                                 anchor='w', font=('DejaVu Sans', 25, 'bold'))
+        self.detail.pack(side='left')
+        self.label(right, 'Guide en français', MUTED, 11, bg=SURFACE).pack(anchor='w')
         self.detail_info = self.label(right, 'Les commandes et leur guide apparaîtront ici.', MUTED, 10,
                                      bg=SURFACE, wraplength=430, justify='left', anchor='w')
         self.detail_info.pack(fill='x', pady=12)
@@ -147,6 +166,13 @@ class CatalogGUI:
         self.favorite_button = self.button(actions, '☆ Favori', self.toggle_favorite)
         self.favorite_button.pack(side='left')
         self.button(actions, 'Manuel complet', self.show_manual).pack(side='left', padx=5)
+        self.label(right, 'Commandes essentielles', WHITE, 15, bg=SURFACE, font=('DejaVu Sans', 15, 'bold')).pack(anchor='w', pady=(14, 10))
+        table_header = tk.Frame(right, bg=PANEL, padx=10, pady=10)
+        table_header.pack(fill='x')
+        table_header.grid_columnconfigure(0, weight=1, uniform='reference')
+        table_header.grid_columnconfigure(1, weight=1, uniform='reference')
+        self.label(table_header, 'Commande', WHITE, 11, bg=PANEL).grid(row=0, column=0, sticky='w')
+        self.label(table_header, 'Explication', WHITE, 11, bg=PANEL).grid(row=0, column=1, sticky='w')
         self.commands = ScrollArea(right)
         self.commands.pack(fill='both', expand=True)
         self.label(right, 'LAB — appareils personnels et laboratoires autorisés', ORANGE, 9,
@@ -195,6 +221,9 @@ class CatalogGUI:
 
     def filtered(self):
         tools = top_ten(self.tools) if self.mode == 'Top 10' else self.tools
+        featured = ('nmap', 'wireshark', 'tcpdump', 'lynis', 'git', 'python3')
+        if self.mode in ('Bibliothèque', 'Top 10'):
+            tools = sorted(tools, key=lambda t: (featured.index(t.command) if t.command in featured else len(featured), t.name.casefold()))
         if self.mode == 'Favoris ★':
             tools = [t for t in tools if t.command in self.store.data['favorites']]
         return [t for t in tools if (not self.category or t.category == self.category)
@@ -231,7 +260,9 @@ class CatalogGUI:
         tools = self.filtered()
         pages = max(1, (len(tools) + self.PAGE_SIZE - 1) // self.PAGE_SIZE)
         self.page = min(self.page, pages - 1)
-        self.heading.configure(text=self.category or self.mode)
+        self.heading.configure(text=self.category or ('Vos outils' if self.mode == 'Bibliothèque' else self.mode))
+        for mode, button in self.mode_buttons.items():
+            button.configure(fg=ORANGE if mode == self.mode else MUTED)
         self.status.configure(text=f'{len(tools)} outils — {sum(bool(self.paths.get(t.command)) for t in tools)} installés')
         self.page_label.configure(text=f'{self.page + 1} / {pages}')
         for category, button in self.category_buttons:
@@ -242,22 +273,33 @@ class CatalogGUI:
         for index, tool in enumerate(tools[self.page * self.PAGE_SIZE:(self.page + 1) * self.PAGE_SIZE]):
             selected = self.selected and tool.command == self.selected.command
             card = tk.Frame(self.cards.body, bg=PANEL, highlightthickness=2,
-                            highlightbackground=BLUE if selected else SURFACE, padx=12, pady=12)
+                            highlightbackground=BLUE if selected else SURFACE, padx=16, pady=18)
             card.grid(row=index // 2, column=index % 2, sticky='nsew', padx=5, pady=5)
             favorite = ' ★' if tool.command in self.store.data['favorites'] else ''
+            card_top = tk.Frame(card, bg=PANEL)
+            card_top.pack(fill='x', pady=(0, 14))
             image = self.load_icon(tool)
-            icon = self.label(card, tool_emoji(tool), BLUE, 24, bg=PANEL)
             if image:
-                icon.configure(image=image, text='')
+                icon = self.label(card_top, '', bg=PANEL)
+                icon.configure(image=image)
                 icon.image = image
-            icon.pack(anchor='w')
-            self.label(card, tool.name + favorite, BLUE if selected else WHITE, 14, bg=PANEL,
-                       wraplength=220, justify='left').pack(anchor='w', pady=5)
-            self.label(card, ('Installé' if self.paths.get(tool.command) else 'Absent du PATH') + '  · LAB',
-                       MUTED, 9, bg=PANEL).pack(anchor='w')
-            self.label(card, tool.description, MUTED, 10, bg=PANEL, wraplength=220,
-                       justify='left').pack(anchor='w', pady=8)
-            self.button(card, 'Ouvrir le guide →', lambda t=tool: self.select(t)).pack(fill='x')
+            else:
+                icon = pictogram(card_top, tool.command, tool_emoji(tool), PANEL)
+            icon.pack(side='left', padx=(0, 10))
+            metadata = tk.Frame(card_top, bg=PANEL)
+            metadata.pack(side='left', fill='x', expand=True)
+            self.label(metadata, tool.name + favorite, BLUE if selected else WHITE, 16, bg=PANEL,
+                       font=('DejaVu Sans', 16, 'bold'), wraplength=200, justify='left').pack(anchor='w')
+            badges = tk.Frame(metadata, bg=PANEL)
+            badges.pack(anchor='w', pady=(8, 0))
+            installed = bool(self.paths.get(tool.command))
+            self.label(badges, '✓ Installé' if installed else 'Absent', '#8fe3b4' if installed else MUTED,
+                       9, bg='#152d25' if installed else SURFACE, padx=5, pady=3).pack(side='left')
+            self.label(badges, '⚗ LAB', BLUE, 9, bg='#192d40', padx=5, pady=3).pack(side='left', padx=5)
+            icon.bind('<Button-1>', lambda e, t=tool: self.select(t))
+            self.label(card, tool.description, MUTED, 10, bg=PANEL, wraplength=280,
+                       justify='left').pack(anchor='w', pady=(0, 12))
+            self.button(card, 'Ouvrir le guide →', lambda t=tool: self.select(t), bg=PANEL, fg=BLUE).pack(anchor='w')
             card.bind('<Button-1>', lambda e, t=tool: self.select(t))
             for child in card.winfo_children():
                 if not isinstance(child, tk.Button):
@@ -292,7 +334,10 @@ class CatalogGUI:
             return
         tool = self.selected
         star = ' ★' if tool.command in self.store.data['favorites'] else ''
-        self.detail.configure(text=tool.name + star + ' ' + tool_emoji(tool))
+        self.detail.configure(text=tool.name + star)
+        for child in self.detail_icon_host.winfo_children():
+            child.destroy()
+        pictogram(self.detail_icon_host, tool.command, tool_emoji(tool), SURFACE).pack()
         self.detail_info.configure(text=f'{tool.category}\n{self.paths.get(tool.command) or "Absent du PATH"}\n{tool.description}')
         self.favorite_button.configure(text='★ Retirer' if star else '☆ Favori')
 
@@ -311,10 +356,10 @@ class CatalogGUI:
             child.destroy()
         for command, explanation in entries:
             row = tk.Frame(self.commands.body, bg=PANEL, padx=10, pady=10)
-            row.pack(fill='x', pady=4)
+            row.pack(fill='x', pady=1)
             # Wrapping is visual only: the clipboard keeps the exact command.
-            row.grid_columnconfigure(0, weight=1)
-            row.grid_columnconfigure(1, weight=1)
+            row.grid_columnconfigure(0, weight=1, uniform='reference')
+            row.grid_columnconfigure(1, weight=1, uniform='reference')
             self.label(row, command, BLUE, 10, bg=PANEL, wraplength=190,
                        justify='left', anchor='nw').grid(row=0, column=0, sticky='nw', padx=(0, 12))
             self.label(row, explanation, WHITE, 10, bg=PANEL, wraplength=210,

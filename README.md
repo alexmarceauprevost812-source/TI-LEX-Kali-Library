@@ -461,3 +461,14 @@ Chaque nom d’outil comporte aussi un emoji correspondant à sa catégorie
 (🌐 réseau, 📶 Wi-Fi, 📄 fichiers, 🔧 développement…). Les outils non classés
 utilisent **🐉**, le dragon. Ces symboles décoratifs ne sont pas des logos officiels.
 Leur rendu dépend des polices emoji de votre terminal ; aucune image à télécharger.
+
+
+## Présentation de la maquette
+
+La V3 reprend la composition validée : logo orange/blanc agrandi, catégories
+compactes avec numéros sur fond rouge, cartes sombres en deux colonnes, sélection
+bleu ciel, badges Installé/LAB et tableau Commande/Explication à droite.
+Les premières cartes mettent en avant Nmap, Wireshark, tcpdump, Lynis, Git et Python.
+Les pictogrammes de secours sont dessinés localement (œil, aileron, signal,
+bouclier, branche Git, Python) ; ce sont des illustrations et pas une certification
+de logos officiels. Les icônes locales compatibles restent prioritaires.

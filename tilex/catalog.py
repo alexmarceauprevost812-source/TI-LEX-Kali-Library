@@ -1,6 +1,7 @@
 """Curated tool metadata; discovery never executes a tool."""
 from dataclasses import dataclass
 import shutil
+import os
 import unicodedata
 
 @dataclass(frozen=True)
@@ -51,7 +52,44 @@ def normalize(value):
     return ''.join(c for c in unicodedata.normalize('NFKD', value.casefold())
                    if not unicodedata.combining(c))
 
-def search(query):
+def search(query, tools=TOOLS):
     needle = normalize(query.strip())
-    return [t for t in TOOLS if needle in normalize(
+    return [t for t in tools if needle in normalize(
         f'{t.name} {t.command} {t.category} {t.description}')]
+
+
+INSTALLED_CATEGORY = 'Autres outils installés'
+
+def installed_catalog():
+    """Enumerate executable PATH entries without running any command.
+
+    Known tools retain curated descriptions. Unknown executables get explicit
+    generic metadata rather than guessed security categories or help flags.
+    """
+    known = {tool.command: tool for tool in TOOLS}
+    paths = discover()
+    extensions = {ext.lower() for ext in os.environ.get(
+        'PATHEXT', '.COM;.EXE;.BAT;.CMD').split(';') if ext}
+    for directory in os.get_exec_path():
+        try:
+            with os.scandir(directory or os.curdir) as entries:
+                for entry in entries:
+                    try:
+                        if not entry.is_file() or not os.access(entry.path, os.X_OK):
+                            continue
+                        name = entry.name
+                        if os.name == 'nt' and os.path.splitext(name)[1].lower() not in extensions:
+                            continue
+                        # which supplies the effective PATH priority and platform rules.
+                        resolved = shutil.which(name)
+                        if resolved:
+                            paths.setdefault(name, resolved)
+                    except OSError:
+                        continue
+        except OSError:
+            continue
+    additional = [Tool(name, INSTALLED_CATEGORY, name,
+                       'Exécutable détecté dans le PATH local. Description non renseignée.', '')
+                  for name in paths if paths[name] and name not in known]
+    tools = tuple(TOOLS) + tuple(sorted(additional, key=lambda t: t.name.casefold()))
+    return tools, paths

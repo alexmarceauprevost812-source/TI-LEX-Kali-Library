@@ -20,9 +20,9 @@ Menu : **1 Bibliothèque des outils**, **2 Catégories**, **3 Rechercher un outi
 
 Saisir un numéro puis Entrée ; `0` revient au niveau précédent. Bibliothèque → catégorie → liste → fiche outil. Chaque fiche présente nom, catégorie, statut, chemin détecté, description et commande d'aide à consulter manuellement. `1` dans une fiche ajoute ou retire le favori. Ctrl+C et fin d'entrée quittent proprement.
 
-27 outils sont répertoriés dans huit catégories : réseau, système, web, analyse réseau, audit sécurité, audit de mots de passe de laboratoire, forensique et développement. La recherche couvre les noms, commandes, catégories et descriptions, sans distinction de casse ou d'accents.
+27 outils disposent de fiches détaillées dans huit catégories : réseau, système, web, analyse réseau, audit sécurité, audit de mots de passe de laboratoire, forensique et développement. La recherche couvre les noms, commandes, catégories et descriptions, sans distinction de casse ou d'accents.
 
-Les statuts reposent uniquement sur `shutil.which` et le `PATH` courant : « absent » signifie introuvable dans ce PATH. Cela ne prouve ni l'absence de tout paquet ni le fonctionnement de l'outil. Le catalogue est une sélection, pas un inventaire exhaustif de Kali. Les alias shell ne sont pas détectés. Paramètres permet d'actualiser la détection et de filtrer les outils installés. La distribution Kali est identifiée via `/etc/os-release`.
+Les statuts reposent uniquement sur `shutil.which` et le `PATH` courant : « absent » signifie introuvable dans ce PATH. Cela ne prouve ni l'absence de tout paquet ni le fonctionnement de l'outil. Le catalogue détaillé est complété automatiquement par les exécutables disponibles dans le PATH. Les alias shell ne sont pas détectés. Paramètres permet d'actualiser la détection et de filtrer les outils installés. La distribution Kali est identifiée via `/etc/os-release`.
 
 ## Persistance
 
@@ -132,3 +132,23 @@ git pull --ff-only origin main
 ```
 
 Puis relancer avec `python3 main.py` (Kali), `python main.py` (Termux) ou `py -3 main.py` (Windows).
+
+
+## Tous les outils déjà installés
+
+Ouvrir **1 Bibliothèque des outils**, puis **10 Tous les outils installés**.
+La détection parcourt les dossiers du PATH sans exécuter les outils. Les commandes
+connues conservent leur catégorie et leur description ; les autres apparaissent
+également dans **9 Autres outils installés**, avec leur chemin et une fiche générique.
+Toutes ces commandes sont recherchables et peuvent être ajoutées aux favoris.
+
+Les listes affichent 20 résultats par page : saisir `n` pour la suivante, `p` pour
+la précédente, le numéro de l'outil pour sa fiche ou `0` pour revenir.
+Après une installation, utiliser **6 Paramètres → 3 Actualiser la détection du PATH**
+ou relancer le programme.
+
+Cette vue comprend aussi les commandes générales du système. Elle inventorie les
+exécutables accessibles, pas les paquets téléchargés : un fichier non installé,
+un alias shell, une application graphique hors PATH ou un programme dans un dossier
+absent du PATH ne sera pas détecté. Pour les exécutables sans fiche détaillée,
+l'application ne suppose pas qu'une option `--help` existe.

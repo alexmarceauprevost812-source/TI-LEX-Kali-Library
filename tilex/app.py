@@ -1,7 +1,7 @@
 """Keyboard navigation; tools are never invoked by this application."""
 import argparse
 import shlex
-from .catalog import CATEGORIES, TOOLS, discover, search
+from .catalog import CATEGORIES, TOOLS, installed_catalog, INSTALLED_CATEGORY, search
 from .storage import Store
 from .system import information
 from .ui import View
@@ -10,7 +10,7 @@ class Application:
     def __init__(self, store):
         self.store = store
         self.view = View(store)
-        self.paths = discover()
+        self.tools, self.paths = installed_catalog()
 
     def save(self, operation):
         try:
@@ -19,11 +19,16 @@ class Application:
             print(f'Enregistrement impossible : {exc}')
             self.view.pause()
 
-    def pick(self, items):
-        for i, label in enumerate(items, 1):
+    def pick(self, items, page=0):
+        start = page * 20
+        for i, label in enumerate(items[start:start + 20], start + 1):
             print(f'{i:2}  {label}')
+        if len(items) > 20:
+            print(f'Page {page + 1}/{(len(items) + 19) // 20} — n : suivante, p : précédente')
         print(' 0  Retour')
         choice = self.view.ask()
+        if choice in ('n', 'p'):
+            return choice
         if choice == '0':
             return None
         if choice.isdecimal() and 1 <= int(choice) <= len(items):
@@ -39,7 +44,10 @@ class Application:
             print(f'Nom : {tool.name}\nCatégorie : {tool.category}')
             print(f'Statut : {"Installé" if path else "Absent du PATH"}\nChemin : {path or "—"}')
             print(f'Description : {tool.description}')
-            print(f'Aide à consulter manuellement : {shlex.quote(path or tool.command)} {tool.help_args}')
+            if tool.help_args:
+                print(f'Aide à consulter manuellement : {shlex.quote(path or tool.command)} {tool.help_args}')
+            else:
+                print('Aide : consultez la documentation de cet exécutable ; option inconnue.')
             print('Usage : défense et laboratoire expressément autorisé.')
             print(f'Favori : {"Oui" if tool.command in self.store.data["favorites"] else "Non"}')
             print('\n1  Ajouter/retirer des favoris\n0  Retour')
@@ -50,6 +58,7 @@ class Application:
                 self.save(lambda: self.store.toggle_favorite(tool.command))
 
     def tool_list(self, tools, breadcrumb):
+        page = 0
         while True:
             visible = [t for t in tools if not self.store.data['installed_only'] or self.paths[t.command]]
             self.view.header(breadcrumb)
@@ -57,7 +66,10 @@ class Application:
                 print('Aucun outil dans cette vue. Vérifiez le filtre dans Paramètres.')
             labels = [f'{t.name} [{"installé" if self.paths[t.command] else "absent"}]'
                       + (' ★' if t.command in self.store.data['favorites'] else '') for t in visible]
-            selection = self.pick(labels)
+            selection = self.pick(labels, page)
+            if selection in ('n', 'p'):
+                page = min(max(0, page + (1 if selection == 'n' else -1)), max(0, (len(labels) - 1) // 20))
+                continue
             if selection is None:
                 return
             if selection >= 0:
@@ -66,13 +78,14 @@ class Application:
     def categories(self, root):
         while True:
             self.view.header(f'{root} → Catégories')
-            selection = self.pick([f'{cat} ({sum(bool(self.paths[t.command]) for t in TOOLS if t.category == cat)} installés)'
-                                   for cat in CATEGORIES])
+            categories = CATEGORIES + (INSTALLED_CATEGORY, 'Tous les outils installés')
+            selection = self.pick([f'{cat} ({sum(bool(self.paths[t.command]) for t in self.tools if t.category == cat)} installés)'
+                                   for cat in categories[:-1]] + [f'Tous les outils installés ({sum(bool(p) for p in self.paths.values())})'])
             if selection is None:
                 return
-            if selection >= 0:
-                category = CATEGORIES[selection]
-                self.tool_list([t for t in TOOLS if t.category == category], f'{root} → {category}')
+            if isinstance(selection, int) and selection >= 0:
+                category = categories[selection]
+                self.tool_list([t for t in self.tools if (self.paths[t.command] if category == 'Tous les outils installés' else t.category == category)], f'{root} → {category}')
 
     def settings(self):
         while True:
@@ -88,7 +101,7 @@ class Application:
             if key:
                 self.save(lambda: self.store.set(key, not self.store.data[key]))
             elif choice == '3':
-                self.paths = discover()
+                self.tools, self.paths = installed_catalog()
 
     def run(self):
         try:
@@ -104,14 +117,14 @@ class Application:
                 if choice in ('1', '2'):
                     self.categories('Bibliothèque' if choice == '1' else 'Catégories')
                 elif choice == '3':
-                    self.tool_list(search(self.view.ask('Recherche')), 'Recherche → Résultats')
+                    self.tool_list(search(self.view.ask('Recherche'), self.tools), 'Recherche → Résultats')
                 elif choice == '4':
-                    self.tool_list([t for t in TOOLS if t.command in self.store.data['favorites']], 'Favoris')
+                    self.tool_list([t for t in self.tools if t.command in self.store.data['favorites']], 'Favoris')
                 elif choice == '5':
                     self.view.header('Informations système')
                     for key, value in information().items():
                         print(f'{key} : {value}')
-                    print(f'Outils détectés : {sum(bool(p) for p in self.paths.values())}/{len(TOOLS)}')
+                    print(f'Outils détectés : {sum(bool(p) for p in self.paths.values())}/{len(self.tools)}')
                     self.view.pause()
                 elif choice == '6':
                     self.settings()

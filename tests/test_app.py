@@ -8,7 +8,7 @@ import tempfile
 import unittest
 from unittest.mock import patch
 
-from tilex.catalog import TOOLS, discover, search
+from tilex.catalog import TOOLS, discover, search, installed_catalog, INSTALLED_CATEGORY
 from tilex.storage import Store
 from tilex.system import information
 from tilex.app import Application
@@ -25,6 +25,37 @@ class LibraryTests(unittest.TestCase):
                 paths = discover()
             self.assertEqual(paths['git'], str(executable))
             self.assertIsNone(paths['nmap'])
+
+    @unittest.skipIf(os.name == 'nt', 'Unix executable fixtures')
+    def test_extra_installed_tools_and_path_priority(self):
+        with tempfile.TemporaryDirectory() as first, tempfile.TemporaryDirectory() as second:
+            for folder in (first, second):
+                executable = Path(folder) / 'local-lab-tool'
+                executable.write_text('not executed')
+                executable.chmod(0o755)
+            (Path(first) / 'not-executable').write_text('data')
+            (Path(first) / 'directory').mkdir()
+            with patch.dict(os.environ, {'PATH': os.pathsep.join((first, second, '/missing-directory'))}):
+                tools, paths = installed_catalog()
+            matches = search('local-lab-tool', tools)
+            self.assertEqual(len(matches), 1)
+            self.assertEqual(matches[0].category, INSTALLED_CATEGORY)
+            self.assertEqual(paths['local-lab-tool'], str(Path(first) / 'local-lab-tool'))
+            self.assertNotIn('not-executable', paths)
+            self.assertNotIn('directory', paths)
+            with tempfile.TemporaryDirectory() as config:
+                store = Store(config)
+                store.toggle_favorite('local-lab-tool')
+                self.assertIn(matches[0].command, Store(config).data['favorites'])
+
+    def test_pagination(self):
+        with tempfile.TemporaryDirectory() as config:
+            app = Application(Store(config))
+            with patch('builtins.input', return_value='n'), patch('sys.stdout', new_callable=io.StringIO) as output:
+                self.assertEqual(app.pick([str(i) for i in range(45)], 1), 'n')
+                self.assertIn('Page 2/3', output.getvalue())
+                self.assertIn('21  20', output.getvalue())
+                self.assertNotIn('41  40', output.getvalue())
 
     def test_search_accents_and_case(self):
         self.assertTrue(search('DEVELOPPEMENT'))

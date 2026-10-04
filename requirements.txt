@@ -1,2 +1,1 @@
-# Aucune dépendance pip.
-# Interface graphique : Tkinter (Kali : python3-tk ; Termux : python-tkinter).
+# Aucune dépendance externe : bibliothèque standard Python uniquement.

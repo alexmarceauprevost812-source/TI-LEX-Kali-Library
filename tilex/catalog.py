@@ -131,3 +131,10 @@ def installed_catalog():
                   for name in paths if paths[name] and name not in known]
     tools = tuple(TOOLS) + tuple(sorted(additional, key=lambda t: t.name.casefold()))
     return tools, paths
+
+
+TOP_TEN = ('nmap', 'wireshark', 'tcpdump', 'ip', 'ss', 'curl', 'lynis', 'file', 'python3', 'git')
+
+def top_ten(tools):
+    by_command = {tool.command: tool for tool in tools}
+    return [by_command[command] for command in TOP_TEN if command in by_command]

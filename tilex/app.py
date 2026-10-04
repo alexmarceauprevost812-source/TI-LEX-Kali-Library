@@ -1,11 +1,11 @@
 """Keyboard navigation; tools are never invoked by this application."""
 import argparse
 import shlex
-from .catalog import CATEGORIES, TOOLS, installed_catalog, INSTALLED_CATEGORY, search
+from .catalog import CATEGORIES, TOOLS, installed_catalog, INSTALLED_CATEGORY, search, top_ten
 from .storage import Store
 from .system import information
 from .ui import View
-from .icons import panel, refresh
+from .icons import panel, refresh, tool_emoji
 from .guides import guide, NOTES, NMAP_SOURCES
 from .manuals import read_manual, options_from_manual
 from .sidebar import command_panel
@@ -23,11 +23,11 @@ class Application:
             print(f'Enregistrement impossible : {exc}')
             self.view.pause()
 
-    def pick(self, items, page=0, preview=None, command_page=0):
+    def pick(self, items, page=0, preview=None, command_page=0, selected_index=None):
         start = page * 20
         rows = [f'{i:2}  {label}' for i, label in enumerate(items[start:start + 20], start + 1)]
         right = command_panel(preview, command_page, self.store.directory / 'manuals')[0] if preview else ()
-        self.view.columns(rows, right, show_below=bool(preview))
+        self.view.columns(rows, right, show_below=bool(preview), selected_index=(selected_index - start if selected_index is not None else None))
         if preview:
             print('v + numéro : aperçu à droite (exemple : v2)')
         if len(items) > 20:
@@ -48,9 +48,10 @@ class Application:
 
     def tool_card(self, tool):
         while True:
-            self.view.header(f'Bibliothèque → {tool.category} → {tool.name}')
+            favorite = ' ★' if tool.command in self.store.data['favorites'] else ''
+            self.view.header(f'Bibliothèque → {tool.category} → {tool.name}{favorite}')
             path = self.paths[tool.command]
-            details = [f'Nom : {tool.name}', f'Catégorie : {tool.category}',
+            details = [f'Nom : {tool.name}{favorite} {tool_emoji(tool)}', f'Catégorie : {tool.category}',
                        f'Statut : {"Installé" if path else "Absent du PATH"}',
                        f'Chemin : {path or "—"}', f'Description : {tool.description}']
             if tool.help_args:
@@ -62,7 +63,7 @@ class Application:
                             'Vérifiez l’appareil et votre autorisation avant toute action.',
                             f'Favori : {"Oui" if tool.command in self.store.data["favorites"] else "Non"}',
                             '', '1  Ajouter/retirer des favoris', '2  Commandes et guide en français', '3  Toutes les options documentées', '4  Manuel complet', '0  Retour'])
-            self.view.columns(details, panel(tool, self.view.color))
+            self.view.columns(details, panel(tool, self.view.color), selected_index=0)
             choice = self.view.ask()
             if choice == '0':
                 return
@@ -131,10 +132,10 @@ class Application:
             if not visible:
                 print('Aucun outil dans cette vue. Vérifiez le filtre dans Paramètres.')
             print('LAB = utilisation sur vos appareils ou dans un laboratoire autorisé.')
-            labels = [f'{t.name} [LAB] [{"installé" if self.paths[t.command] else "absent"}]'
-                      + (' ★' if t.command in self.store.data['favorites'] else '') for t in visible]
+            labels = [t.name + (' ★' if t.command in self.store.data['favorites'] else '')
+                      + f' {tool_emoji(t)} [LAB] [{"installé" if self.paths[t.command] else "absent"}]' for t in visible]
             preview = next((t for t in visible if t.command == preview_command), visible[page * 20] if visible else None)
-            selection = self.pick(labels, page, preview, command_page)
+            selection = self.pick(labels, page, preview, command_page, visible.index(preview) if preview else None)
             if selection in ('c', 'd') and preview:
                 pages = command_panel(preview, command_page, self.store.directory / 'manuals')[1]
                 command_page = min(max(0, command_page + (1 if selection == 'c' else -1)), pages - 1)
@@ -190,7 +191,7 @@ class Application:
                 self.view.pause()
             while True:
                 self.view.header('Menu principal')
-                self.view.columns(['1  Bibliothèque des outils', '2  Catégories', '3  Rechercher un outil', '4  Favoris', '5  Informations système', '6  Paramètres', '0  Quitter'])
+                self.view.columns(['1  Bibliothèque des outils', '2  Catégories', '3  Rechercher un outil', '4  Favoris', '5  Informations système', '6  Paramètres', '7  Top 10 — outils de choix', '0  Quitter'])
                 choice = self.view.ask()
                 if choice == '0':
                     break
@@ -208,6 +209,8 @@ class Application:
                     self.view.pause()
                 elif choice == '6':
                     self.settings()
+                elif choice == '7':
+                    self.tool_list(top_ten(self.tools), 'Top 10 — sélection fixe d’outils')
                 else:
                     print('Choix invalide.')
                     self.view.pause()

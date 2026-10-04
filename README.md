@@ -360,3 +360,24 @@ OPTIONS
 
 Utiliser uniquement les options réellement documentées pour cet outil. La
 lecture d'un fichier d'aide ne lance pas l'exécutable correspondant.
+
+
+## Bleu ciel, Top 10 et favoris
+
+L’outil affiché en aperçu avec `v` + numéro est repéré en **bleu ciel** dans la
+liste. Le nom dans la fiche est également bleu ciel ; les numéros restent rouge
+foncé. En mode sans couleurs, toutes les fonctions restent disponibles.
+
+**7 Top 10 — outils de choix** ouvre une sélection fixe : Nmap, Wireshark,
+tcpdump, ip, ss, curl, Lynis, file, Python et Git. Ce sont des raccourcis, pas un
+classement de vos usages. Le filtre « outils installés » s’applique aussi ici.
+
+Les favoris portent une **★ immédiatement après leur nom**, dans les listes,
+le Top 10 et leur fiche. Dans la fiche, **1** ajoute ou retire le favori ; les
+étoiles sont actualisées au retour dans la liste et conservées au redémarrage.
+
+
+Chaque nom d’outil comporte aussi un emoji correspondant à sa catégorie
+(🌐 réseau, 📶 Wi-Fi, 📄 fichiers, 🔧 développement…). Les outils non classés
+utilisent **🐉**, le dragon. Ces symboles décoratifs ne sont pas des logos officiels.
+Leur rendu dépend des polices emoji de votre terminal ; aucune image à télécharger.

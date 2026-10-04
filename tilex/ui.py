@@ -7,6 +7,7 @@ import re
 
 ORANGE = '\033[38;2;210;105;30m'
 WHITE = '\033[97m'
+SKY_BLUE = '\033[38;2;135;206;235m'
 DARK_RED = '\033[38;2;180;35;35m'
 BAR = '=' * 48
 LOGO_ROWS = (
@@ -46,18 +47,20 @@ class View:
         print(breadcrumb)
         print('─' * 60)
 
-    def numbered(self, line):
+    def numbered(self, line, selected=False):
         if self.color:
-            return re.sub(r'^(\s*)(\d+)(?=\s)',
-                          lambda match: match[1] + DARK_RED + match[2] + WHITE,
+            body_color = SKY_BLUE if selected else WHITE
+            colored = re.sub(r'^(\s*)(\d+)(?=\s)',
+                          lambda match: match[1] + DARK_RED + match[2] + body_color,
                           line, count=1)
+            return body_color + colored + WHITE
         return line
 
-    def columns(self, left, right=(), show_below=False):
+    def columns(self, left, right=(), show_below=False, selected_index=None):
         width = shutil.get_terminal_size(fallback=(80, 24)).columns
         if not sys.stdout.isatty() or width < 90 or not right:
-            for line in left:
-                print(self.numbered(line))
+            for index, line in enumerate(left):
+                print(self.numbered(line, index == selected_index))
             if show_below and right:
                 print('\nCOMMANDES DE L’OUTIL APERÇU')
                 for line in right:
@@ -65,10 +68,10 @@ class View:
             return
         left_width = width - 30
         rows = []
-        for line in left:
-            rows.extend(textwrap.wrap(line, width=left_width, replace_whitespace=False) or [''])
+        for index, line in enumerate(left):
+            rows.extend((part, index == selected_index) for part in (textwrap.wrap(line, width=left_width, replace_whitespace=False) or ['']))
         for index in range(max(len(rows), len(right))):
-            text = rows[index] if index < len(rows) else ''
+            text, selected = rows[index] if index < len(rows) else ('', False)
             image = right[index] if index < len(right) else ''
             # Chafa emits color codes; count only visible characters and cap width.
             count = 0
@@ -80,7 +83,7 @@ class View:
                     clipped += part
                     count += 1
             reset = WHITE + '\033[40m' if self.color else ''
-            print(self.numbered(text.ljust(left_width)) + '  | ' + clipped + reset)
+            print(self.numbered(text.ljust(left_width), selected) + '  | ' + clipped + reset)
 
     def guide_table(self, examples):
         width = shutil.get_terminal_size(fallback=(80, 24)).columns

@@ -178,6 +178,22 @@ class LibraryTests(unittest.TestCase):
                 self.assertEqual(run.call_args.args[0], ['/termux/man', 'example'])
         read_manual.cache_clear()
 
+    def test_top_ten_and_decorative_symbols(self):
+        from tilex.catalog import top_ten, CATEGORIES, Tool
+        from tilex.icons import tool_emoji
+        selected = top_ten(TOOLS)
+        self.assertEqual(len(selected), 10)
+        self.assertEqual(selected[0].command, 'nmap')
+        self.assertEqual(tool_emoji(Tool('Unknown', CATEGORIES[-1], 'unknown', '')), '🐉')
+        self.assertEqual(tool_emoji(next(t for t in TOOLS if t.command == 'ip')), '🌐')
+        from tilex.ui import View, SKY_BLUE, DARK_RED
+        with tempfile.TemporaryDirectory() as folder:
+            view = View(Store(folder))
+            with patch.object(View, 'color', new_callable=unittest.mock.PropertyMock, return_value=True):
+                line = view.numbered(' 1 Git ★', selected=True)
+                self.assertIn(SKY_BLUE, line)
+                self.assertIn(DARK_RED + '1', line)
+
     def test_search_accents_and_case(self):
         self.assertTrue(search('DEVELOPPEMENT'))
         self.assertEqual(search('john THE ripper')[0].command, 'john')

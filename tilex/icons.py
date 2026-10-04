@@ -70,3 +70,18 @@ def refresh():
     icon_index.cache_clear()
     find_icon.cache_clear()
     render_icon.cache_clear()
+
+# Category symbols are decorative, not claims about official branding.
+CATEGORY_EMOJI = {
+    'Réseau et connexions': '🌐', 'Analyse du trafic réseau': '📡',
+    'Wi-Fi — laboratoire autorisé': '📶', 'Sites et applications web': '🌍',
+    'Inventaire des ports et services': '🔎', 'Audit des vulnérabilités': '🔐',
+    'Mots de passe — laboratoire autorisé': '🔑',
+    'Forensique et preuves numériques': '🔬', 'Fichiers et métadonnées': '📄',
+    'Analyse de logiciels malveillants': '🦠', 'Système et performances': '💻',
+    'Journaux et surveillance': '📋', 'Développement et programmation': '🔧',
+    'Bases de données': '🗄', 'Sauvegarde et récupération': '💾',
+}
+
+def tool_emoji(tool):
+    return CATEGORY_EMOJI.get(tool.category, '🐉')

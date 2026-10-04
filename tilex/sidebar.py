@@ -1,5 +1,6 @@
 """Paginated command reference next to the tool list."""
 import textwrap
+from .icons import tool_emoji
 from .guides import guide
 from .manuals import read_manual, options_from_manual
 
@@ -16,7 +17,7 @@ def command_panel(tool, page=0, manual_directory=None):
     entries, message = command_entries(tool.command, manual_directory)
     pages = max(1, (len(entries) + 1) // 2)
     page = min(max(0, page), pages - 1)
-    rows = textwrap.wrap(tool.name + ' — COMMANDES', width=26)
+    rows = textwrap.wrap(tool.name + ' ' + tool_emoji(tool) + ' — COMMANDES', width=26)
     rows.append(f'Page {page + 1}/{pages}')
     for command, explanation in entries[page * 2:page * 2 + 2]:
         rows.append('')

@@ -4,6 +4,8 @@ import os
 import re
 import shutil
 import subprocess
+from pathlib import Path
+from .storage import Store
 
 
 def clean(text):
@@ -17,16 +19,27 @@ def clean(text):
     return ''.join(c for c in text if c in '\n\t' or ord(c) >= 32).replace('−', '-').replace('‐', '-')
 
 @lru_cache(maxsize=64)
-def read_manual(command):
+def read_manual(command, manual_directory=None):
+    if not command or '/' in command or '\\' in command or any(ord(c) < 32 for c in command):
+        return '', 'Nom de commande non pris en charge par le lecteur de manuel.'
+    directory = Path(manual_directory) if manual_directory else Store().directory / 'manuals'
+    try:
+        local = directory / (command + '.txt')
+        if local.is_file():
+            return clean(local.read_text(encoding='utf-8')), 'Documentation locale personnalisée : ' + str(local)
+    except (OSError, UnicodeError):
+        return '', 'Fichier de documentation locale illisible (UTF-8 attendu).'
     reader = shutil.which('man')
     if not reader:
-        return '', 'Lecteur man absent. Sur Kali : sudo apt install man-db manpages-fr'
+        return '', 'Man absent : ajoutez une aide UTF-8 dans ' + str(directory / (command + '.txt'))
     if not command or '/' in command or '\\' in command or any(ord(c) < 32 for c in command):
         return '', 'Nom de commande non pris en charge par le lecteur de manuel.'
     env = dict(os.environ, MANPAGER='cat', PAGER='cat', MANOPT='', MANWIDTH='140',
                MAN_KEEP_FORMATTING='0', GROFF_NO_SGR='1')
     try:
-        result = subprocess.run([reader, '-P', 'cat', '-L', 'fr', '-S', '1:8:6', '--', command],
+        termux = 'com.termux' in os.environ.get('PREFIX', '')
+        arguments = [reader, command] if termux else [reader, '-P', 'cat', '-L', 'fr', '-S', '1:8:6', '--', command]
+        result = subprocess.run(arguments,
                                 capture_output=True, text=True, errors='replace',
                                 timeout=10, env=env)
     except (OSError, subprocess.SubprocessError):

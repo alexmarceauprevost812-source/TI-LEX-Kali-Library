@@ -53,11 +53,15 @@ class View:
                           line, count=1)
         return line
 
-    def columns(self, left, right=()):
+    def columns(self, left, right=(), show_below=False):
         width = shutil.get_terminal_size(fallback=(80, 24)).columns
         if not sys.stdout.isatty() or width < 90 or not right:
             for line in left:
                 print(self.numbered(line))
+            if show_below and right:
+                print('\nCOMMANDES DE L’OUTIL APERÇU')
+                for line in right:
+                    print(line)
             return
         left_width = width - 30
         rows = []

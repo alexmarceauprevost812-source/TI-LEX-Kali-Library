@@ -50,6 +50,11 @@ NMAP_SOURCES = (
 )
 
 def guide(command):
+    import os
+    if os.name == 'nt' and command.casefold().endswith('.exe'):
+        command = command[:-4].casefold()
+    if command == 'python':
+        command = 'python3'
     if command in GUIDES:
         return GUIDES[command]
     return ((f'man -- {shlex.quote(command)}',

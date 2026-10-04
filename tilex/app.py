@@ -8,6 +8,7 @@ from .ui import View
 from .icons import panel, refresh
 from .guides import guide, NOTES, NMAP_SOURCES
 from .manuals import read_manual, options_from_manual
+from .sidebar import command_panel
 
 class Application:
     def __init__(self, store):
@@ -22,10 +23,11 @@ class Application:
             print(f'Enregistrement impossible : {exc}')
             self.view.pause()
 
-    def pick(self, items, page=0, preview=None):
+    def pick(self, items, page=0, preview=None, command_page=0):
         start = page * 20
         rows = [f'{i:2}  {label}' for i, label in enumerate(items[start:start + 20], start + 1)]
-        self.view.columns(rows, panel(preview, self.view.color) if preview else ())
+        right = command_panel(preview, command_page, self.store.directory / 'manuals')[0] if preview else ()
+        self.view.columns(rows, right, show_below=bool(preview))
         if preview:
             print('v + numéro : aperçu à droite (exemple : v2)')
         if len(items) > 20:
@@ -34,7 +36,7 @@ class Application:
         choice = self.view.ask()
         if choice.startswith('v') and choice[1:].isdecimal() and 1 <= int(choice[1:]) <= len(items):
             return choice
-        if choice in ('n', 'p'):
+        if choice in ('n', 'p') or (preview and choice in ('c', 'd')):
             return choice
         if choice == '0':
             return None
@@ -94,7 +96,7 @@ class Application:
 
     def tool_manual(self, tool, full=False):
         print('Chargement du manuel local…')
-        text, message = read_manual(tool.command)
+        text, message = read_manual(tool.command, self.store.directory / 'manuals')
         options = options_from_manual(text)
         content = text.splitlines() if full else options
         page_size = 18 if full else 4
@@ -122,6 +124,7 @@ class Application:
     def tool_list(self, tools, breadcrumb):
         page = 0
         preview_command = None
+        command_page = 0
         while True:
             visible = [t for t in tools if not self.store.data['installed_only'] or self.paths[t.command]]
             self.view.header(breadcrumb)
@@ -131,12 +134,19 @@ class Application:
             labels = [f'{t.name} [LAB] [{"installé" if self.paths[t.command] else "absent"}]'
                       + (' ★' if t.command in self.store.data['favorites'] else '') for t in visible]
             preview = next((t for t in visible if t.command == preview_command), visible[page * 20] if visible else None)
-            selection = self.pick(labels, page, preview)
+            selection = self.pick(labels, page, preview, command_page)
+            if selection in ('c', 'd') and preview:
+                pages = command_panel(preview, command_page, self.store.directory / 'manuals')[1]
+                command_page = min(max(0, command_page + (1 if selection == 'c' else -1)), pages - 1)
+                continue
             if isinstance(selection, str) and selection.startswith('v'):
                 preview_command = visible[int(selection[1:]) - 1].command
+                command_page = 0
                 continue
             if selection in ('n', 'p'):
                 page = min(max(0, page + (1 if selection == 'n' else -1)), max(0, (len(labels) - 1) // 20))
+                preview_command = None
+                command_page = 0
                 continue
             if selection is None:
                 return

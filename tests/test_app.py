@@ -144,6 +144,40 @@ class LibraryTests(unittest.TestCase):
             self.assertEqual(tool.category, 'Bases de données')
             self.assertEqual(paths[tool.command], str(executable))
 
+    def test_command_sidebar_pages_preserve_entries(self):
+        from tilex.sidebar import command_panel
+        from tilex.catalog import Tool
+        tool = Tool('Test', 'Système', 'test', 'Test')
+        entries = tuple((f'test --option{i}', f'explication{i}') for i in range(7))
+        with patch('tilex.sidebar.command_entries', return_value=(entries, 'Manuel local')):
+            seen = []
+            for page in range(4):
+                rows, pages = command_panel(tool, page)
+                self.assertEqual(pages, 4)
+                seen.extend(rows)
+            text = '\n'.join(seen)
+            for command, explanation in entries:
+                self.assertIn(command, text)
+                self.assertIn(explanation, text)
+        with tempfile.TemporaryDirectory() as config:
+            app = Application(Store(config))
+            with patch('tilex.app.command_panel', return_value=(['Test', 'test --help'], 1)), patch('builtins.input', return_value='c'), patch('sys.stdout', new_callable=io.StringIO) as output:
+                self.assertEqual(app.pick(['Test'], preview=tool), 'c')
+                self.assertIn('test --help', output.getvalue())
+
+    def test_custom_manual_and_termux_reader(self):
+        from tilex.manuals import read_manual
+        read_manual.cache_clear()
+        with tempfile.TemporaryDirectory() as folder:
+            Path(folder, 'example.exe.txt').write_text('OPTIONS\n  --help\n      Affiche l’aide.\n', encoding='utf-8')
+            text, message = read_manual('example.exe', folder)
+            self.assertIn('Affiche l’aide.', text)
+            self.assertIn('personnalisée', message)
+            with patch.dict(os.environ, {'PREFIX': '/data/data/com.termux/files/usr'}), patch('tilex.manuals.shutil.which', return_value='/termux/man'), patch('tilex.manuals.subprocess.run', return_value=subprocess.CompletedProcess([], 0, 'MANUAL', '')) as run:
+                read_manual('example', folder)
+                self.assertEqual(run.call_args.args[0], ['/termux/man', 'example'])
+        read_manual.cache_clear()
+
     def test_search_accents_and_case(self):
         self.assertTrue(search('DEVELOPPEMENT'))
         self.assertEqual(search('john THE ripper')[0].command, 'john')

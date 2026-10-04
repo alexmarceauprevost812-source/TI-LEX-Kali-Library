@@ -291,3 +291,72 @@ réseau et vérifier qu’il s’agit bien de l’appareil prévu. Une adresse I
 ne prouve pas la propriété ni l’autorisation ; les MAC peuvent être aléatoires
 ou modifiées et ne traversent pas les routeurs. Aucun mécanisme de validation
 de propriété ou de lancement d’audit n’est ajouté par cette mention.
+
+
+## Commandes à côté de la liste des outils
+
+Le panneau de droite présente maintenant le nom de l’outil, ses exemples de
+commandes et les options extraites de son manuel, avec les descriptions.
+Les images restent dans les fiches. **v2** choisit l’aperçu du deuxième outil,
+**c** passe à la page de commandes suivante et **d** à la précédente.
+Toutes les entrées disponibles se parcourent par pages de deux, sans supprimer
+les descriptions longues. **n/p** changent la page des outils, et un numéro
+ouvre la fiche. Sur un écran étroit, le panneau apparaît sous la liste.
+
+Ce panneau rassemble les exemples rédigés et les options extraites du manuel
+local ; il ne garantit pas toutes les commandes possibles d’un logiciel.
+La fiche → **4 Manuel complet** reste la référence pour les sous-commandes et
+options que l’extraction n’identifie pas. Les descriptions non traduites restent
+dans la langue du manuel. Aucune commande affichée n’est exécutée.
+
+
+## Panneau des commandes — Android et Windows
+
+Le panneau et les touches **v + numéro**, **c/d**, **n/p** sont également
+compatibles avec Termux et Windows. Agrandir la fenêtre à 90 colonnes pour
+l’affichage à droite ; sinon les commandes apparaissent sous la liste.
+Les exemples Linux ne deviennent pas des commandes Windows natives : ils
+nécessitent Kali/WSL ou un outil compatible installé.
+
+### Termux Android : mise à jour
+
+```sh
+pkg install -y python git mandoc
+cd ~/TI-LEX-Kali-Library
+git pull --ff-only origin main
+python main.py
+```
+
+Les manuels réellement installés sont lus avec le lecteur de Termux. Leur
+présence et leur langue dépendent des paquets. Les images restent facultatives.
+
+### Windows PowerShell : mise à jour
+
+Depuis le dossier parent du projet :
+
+```powershell
+cd TI-LEX-Kali-Library
+git pull --ff-only origin main
+py -3 main.py
+```
+
+Les guides intégrés fonctionnent sans `man`. Pour les autres outils, ajouter
+un fichier d'aide UTF-8 nommé exactement comme la commande détectée, par exemple
+`git.exe.txt`, dans `%APPDATA%\ti-lex-kali\manuals`. L'application affiche ce
+texte dans le manuel complet et en extrait les options disponibles.
+Avec `--config-dir`, utiliser le sous-dossier `manuals` de ce dossier.
+Cette documentation personnalisée fonctionne aussi sur Linux et Termux, où
+elle est prioritaire sur la page man. Elle n'est pas générée automatiquement.
+
+Exemple de format :
+
+```text
+OPTIONS
+  --version
+      Affiche la version du programme.
+  --help
+      Affiche l’aide du programme.
+```
+
+Utiliser uniquement les options réellement documentées pour cet outil. La
+lecture d'un fichier d'aide ne lance pas l'exécutable correspondant.

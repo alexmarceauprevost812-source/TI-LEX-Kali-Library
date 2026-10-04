@@ -182,3 +182,55 @@ Sous 90 colonnes, en sortie redirigée ou sans couleurs, l'interface garde son
 fonctionnement textuel. Chafa est le seul programme externe exécuté pour cette
 fonction ; aucun outil d'audit du catalogue n'est lancé. La détection des icônes
 est actualisée avec **Paramètres → Actualiser la détection du PATH**.
+
+
+## Commandes expliquées en français
+
+Dans une fiche outil, choisir **2 Commandes et guide en français**.
+Les commandes complètes sont accompagnées de leur explication, à côté dans un
+terminal large ou en dessous sur un petit écran. `n` / `p` changent de page,
+`0` revient à la fiche. Les 27 outils du catalogue disposent d’exemples rédigés ;
+les autres commandes détectées proposent la consultation du manuel local,
+sans inventer leurs options.
+
+Exemple Nmap :
+
+```sh
+nmap -sT -p 80,443 127.0.0.1
+```
+
+`-p 80,443` sélectionne ces deux ports, `-sT` utilise des connexions TCP et
+`127.0.0.1` désigne votre ordinateur. Le guide distingue les commandes complètes
+des fragments comme `-p`, qui nécessitent une valeur et une cible.
+Sources Nmap : https://nmap.org/book/man-port-specification.html et
+https://nmap.org/book/man-version-detection.html.
+
+Les exemples ne sont jamais exécutés par l’application. Les fichiers d’exemple
+sont à remplacer par vos fichiers de laboratoire ; les exemples web demandent
+un serveur local existant. Vérifier les options de la version installée.
+
+
+## Options de tous les outils : documentation locale
+
+Dans chaque fiche : **3 Toutes les options documentées** affiche les options
+extraites du manuel local et leur description à côté ; **4 Manuel complet**
+affiche toute la page disponible, y compris les sous-commandes et exemples.
+Ces vues fonctionnent pour tout outil détecté qui possède une page man.
+`n` / `p` parcourent toutes les pages, sans tronquer la documentation.
+
+Pour ajouter le lecteur et les traductions disponibles sur Kali :
+
+```sh
+sudo apt update
+sudo apt install -y man-db manpages-fr
+```
+
+Les exemples rédigés du menu 2 sont en français. Les menus 3 et 4 demandent un
+manuel français, avec repli sur l’original : toutes les pages et toutes les options
+ne sont pas traduites. Un outil sans manuel affiche un message explicite.
+L'extraction d'options dépend de la mise en forme ; utiliser le manuel complet
+pour les options non extraites. Il ne s'agit pas d'une garantie d'exhaustivité
+des options d'une version, ni d'une traduction automatique de tous les outils.
+
+Seul `man` est exécuté pour lire la documentation, jamais l'outil sélectionné.
+Source du fonctionnement des langues : https://man7.org/linux/man-pages/man1/man.1.html.

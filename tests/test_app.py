@@ -86,6 +86,43 @@ class LibraryTests(unittest.TestCase):
                 view.columns(['Menu'], ['Image'])
                 self.assertEqual(output.getvalue(), 'Menu\n')
 
+    def test_guides_cover_catalog_and_explain_nmap(self):
+        from tilex.guides import GUIDES, guide
+        self.assertEqual(set(GUIDES), {t.command for t in TOOLS})
+        self.assertTrue(any('nmap -sT -p 80,443 127.0.0.1' == command for command, _ in guide('nmap')))
+        self.assertIn('manuel local', guide('unknown-command')[0][1])
+
+    def test_manual_reader_and_option_extraction(self):
+        from tilex.manuals import read_manual, options_from_manual, clean
+        sample = 'OPTIONS\n       -p PORTS\n              Choisit les ports.\n              Liste ou plage.\n       --help  Affiche l’aide.\nFIN\n'
+        options = options_from_manual(sample)
+        self.assertEqual(options[0], ('-p PORTS', 'Choisit les ports. Liste ou plage.'))
+        self.assertEqual(options[1], ('--help', 'Affiche l’aide.'))
+        self.assertEqual(clean('X\bX'), 'X')
+        read_manual.cache_clear()
+        with patch('tilex.manuals.shutil.which', return_value='/usr/bin/man'), patch('tilex.manuals.subprocess.run', return_value=subprocess.CompletedProcess([], 0, sample, '')) as run:
+            text, _ = read_manual('nmap')
+            self.assertEqual(text, sample)
+            self.assertEqual(run.call_args.args[0][0], '/usr/bin/man')
+            self.assertEqual(run.call_args.args[0][-2:], ['--', 'nmap'])
+            self.assertNotIn('shell', run.call_args.kwargs)
+        read_manual.cache_clear()
+        with patch('tilex.manuals.shutil.which', return_value=None):
+            self.assertEqual(read_manual('tool')[0], '')
+        read_manual.cache_clear()
+
+    def test_guide_and_manual_navigation(self):
+        from tilex.catalog import Tool
+        tool = Tool('Nmap', 'Audit sécurité', 'nmap', 'Test')
+        with tempfile.TemporaryDirectory() as config:
+            app = Application(Store(config))
+            with patch('builtins.input', side_effect=['n', 'p', '0']), patch('sys.stdout', new_callable=io.StringIO) as output:
+                app.tool_guide(tool)
+                self.assertIn('Option : -p 80,443', output.getvalue())
+            with patch('tilex.app.read_manual', return_value=('OPTIONS\n       -p PORTS\n              Choisit les ports.\n', 'Manuel local')), patch('builtins.input', side_effect=['n', '0']), patch('sys.stdout', new_callable=io.StringIO) as output:
+                app.tool_manual(tool)
+                self.assertIn('Choisit les ports.', output.getvalue())
+
     def test_search_accents_and_case(self):
         self.assertTrue(search('DEVELOPPEMENT'))
         self.assertEqual(search('john THE ripper')[0].command, 'john')

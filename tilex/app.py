@@ -6,6 +6,8 @@ from .storage import Store
 from .system import information
 from .ui import View
 from .icons import panel, refresh
+from .guides import guide, NOTES, NMAP_SOURCES
+from .manuals import read_manual, options_from_manual
 
 class Application:
     def __init__(self, store):
@@ -55,13 +57,65 @@ class Application:
                 details.append('Aide : consultez la documentation ; option inconnue.')
             details.extend(['Usage : défense et laboratoire expressément autorisé.',
                             f'Favori : {"Oui" if tool.command in self.store.data["favorites"] else "Non"}',
-                            '', '1  Ajouter/retirer des favoris', '0  Retour'])
+                            '', '1  Ajouter/retirer des favoris', '2  Commandes et guide en français', '3  Toutes les options documentées', '4  Manuel complet', '0  Retour'])
             self.view.columns(details, panel(tool, self.view.color))
             choice = self.view.ask()
             if choice == '0':
                 return
             if choice == '1':
                 self.save(lambda: self.store.toggle_favorite(tool.command))
+            elif choice == '2':
+                self.tool_guide(tool)
+            elif choice in ('3', '4'):
+                self.tool_manual(tool, full=choice == '4')
+
+    def tool_guide(self, tool):
+        examples = guide(tool.command)
+        page = 0
+        while True:
+            self.view.header(f'{tool.name} → Commandes et guide en français')
+            if not self.paths[tool.command]:
+                print('Outil absent du PATH : les exemples ne fonctionneront pas avant installation.')
+            rows = examples[page * 5:page * 5 + 5]
+            self.view.guide_table(rows)
+            print('')
+            for note in NOTES:
+                print(note)
+            if tool.command == 'nmap':
+                print('Documentation : ' + ' | '.join(NMAP_SOURCES))
+            print(f'Page {page + 1}/{(len(examples) + 4) // 5} — n : suivante, p : précédente, 0 : retour')
+            choice = self.view.ask()
+            if choice == '0':
+                return
+            if choice in ('n', 'p'):
+                page = min(max(0, page + (1 if choice == 'n' else -1)), (len(examples) - 1) // 5)
+
+    def tool_manual(self, tool, full=False):
+        print('Chargement du manuel local…')
+        text, message = read_manual(tool.command)
+        options = options_from_manual(text)
+        content = text.splitlines() if full else options
+        page_size = 18 if full else 4
+        page = 0
+        while True:
+            self.view.header(f'{tool.name} → {"Manuel complet" if full else "Options documentées"}')
+            print(message)
+            if not content:
+                print('Aucune option extraite. Choisir 4 dans la fiche pour le manuel complet.' if text else 'Documentation manquante ; aucun outil n’a été exécuté pour deviner ses options.')
+            if full:
+                for line in content[page * page_size:(page + 1) * page_size]:
+                    print(line)
+            else:
+                self.view.guide_table(content[page * page_size:(page + 1) * page_size])
+                print('Options extraites du manuel : elles ne constituent pas des commandes complètes.')
+                print('Extraction indicative ; le manuel complet fait référence et contient aussi les sous-commandes.')
+            pages = max(1, (len(content) + page_size - 1) // page_size)
+            print(f'Page {page + 1}/{pages} — n : suivante, p : précédente, 0 : retour')
+            choice = self.view.ask()
+            if choice == '0':
+                return
+            if choice in ('n', 'p'):
+                page = min(max(0, page + (1 if choice == 'n' else -1)), pages - 1)
 
     def tool_list(self, tools, breadcrumb):
         page = 0
@@ -114,6 +168,7 @@ class Application:
             elif choice == '3':
                 self.tools, self.paths = installed_catalog()
                 refresh()
+                read_manual.cache_clear()
 
     def run(self):
         try:

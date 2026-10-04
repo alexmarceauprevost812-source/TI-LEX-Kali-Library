@@ -70,6 +70,24 @@ class View:
             reset = WHITE + '\033[40m' if self.color else ''
             print(text.ljust(left_width) + '  | ' + clipped + reset)
 
+    def guide_table(self, examples):
+        width = shutil.get_terminal_size(fallback=(80, 24)).columns
+        if width < 80:
+            for command, explanation in examples:
+                print(command)
+                print('  → ' + explanation)
+            return
+        command_width = min(48, max(30, width // 2 - 3))
+        explanation_width = max(20, width - command_width - 3)
+        print('COMMANDE / OPTION'.ljust(command_width) + ' | EXPLICATION EN FRANÇAIS')
+        for command, explanation in examples:
+            left = textwrap.wrap(command, width=command_width) or ['']
+            right = textwrap.wrap(explanation, width=explanation_width) or ['']
+            for index in range(max(len(left), len(right))):
+                print((left[index] if index < len(left) else '').ljust(command_width)
+                      + ' | ' + (right[index] if index < len(right) else ''))
+            print('')
+
     def ask(self, prompt='Choix'):
         return input(f'TI-LEX-KALI > {prompt} : ').strip()
 

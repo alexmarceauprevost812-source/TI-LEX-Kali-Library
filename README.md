@@ -1,6 +1,6 @@
 # TI-LEX-KALI Library V1
 
-Bibliothèque terminal en français pour Kali Linux : fond noir, texte blanc et logo ASCII. Python 3.9+ ; aucune dépendance externe et aucune image nécessaire. Compatible également avec Termux sur Android et Windows natif (outils disponibles selon la plateforme).
+Bibliothèque terminal en français pour Kali Linux : fond noir, menus blancs et logo TI-LEX carré rouge encadré de barres. Python 3.9+ ; aucune dépendance externe et aucune image nécessaire. Compatible également avec Termux sur Android et Windows natif (outils disponibles selon la plateforme).
 
 ## Démarrage
 
@@ -53,7 +53,7 @@ python3 -m unittest discover -s tests -v
 printf '0\n' | python3 main.py --no-color
 ```
 
-Ces tests n'exécutent aucun outil de cybersécurité. L'identité visuelle reprend la référence TI-LEX-KALI noir/blanc et relief textuel ; aucune ressource graphique n'est requise.
+Ces tests n'exécutent aucun outil de cybersécurité. L'identité visuelle utilise un logo TI-LEX en lettres carrées rouges, encadré de barres en haut de l'écran, avec menus blancs sur fond noir ; aucune ressource graphique n'est requise.
 
 ## Copier-coller — Kali Linux / Debian
 

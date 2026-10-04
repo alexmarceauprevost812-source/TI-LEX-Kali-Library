@@ -3,14 +3,14 @@ import os
 import sys
 import shutil
 
-LOGO = r''' _______ ___       ___     _______ __   __       ___   _ _______ ___     ___
-|       |   |     |   |   |       |  |_|  |     |   | | |   _   |   |   |   |
-|_     _|   |_____|   |   |    ___|       |_____|   |_| |  |_|  |   |   |   |
-  |   | |   |_____|   |   |   |___|       |_____|      _|       |   |   |   |
-  |   | |   |     |   |___|    ___|  ___  |     |     |_|   _   |   |___|   |
-  |___| |___|     |_______|_______|__| |__|     |___| |_|__| |__|_______|___|
-   ░▒▓ TI-LEX-KALI · LIBRARY V1 ▓▒░
-'''
+LOGO = '''================================================
+|  ███████ ██       ██      ███████ ██   ██    |
+|     ██   ██       ██      ██       ██ ██     |
+|     ██   ██ █████ ██      █████     ███      |
+|     ██   ██       ██      ██       ██ ██     |
+|     ██   ██       ███████ ███████ ██   ██    |
+|            TI-LEX-KALI · LIBRARY V1           |
+================================================'''
 
 class View:
     def __init__(self, store):
@@ -23,7 +23,11 @@ class View:
     def header(self, breadcrumb):
         if self.color:
             print('\033[0m\033[2J\033[H\033[97m\033[40m', end='')
-        print(LOGO if not sys.stdout.isatty() or shutil.get_terminal_size(fallback=(80, 24)).columns >= 80 else 'TI-LEX-KALI / LIBRARY V1')
+        if self.color:
+            print('\033[91m', end='')
+        print(LOGO if not sys.stdout.isatty() or shutil.get_terminal_size(fallback=(80, 24)).columns >= 48 else '| TI-LEX | TI-LEX-KALI / LIBRARY V1 |')
+        if self.color:
+            print('\033[97m', end='')
         print(breadcrumb)
         print('─' * 60)
 

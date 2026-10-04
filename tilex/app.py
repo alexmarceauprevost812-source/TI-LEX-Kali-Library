@@ -5,6 +5,7 @@ from .catalog import CATEGORIES, TOOLS, installed_catalog, INSTALLED_CATEGORY, s
 from .storage import Store
 from .system import information
 from .ui import View
+from .icons import panel, refresh
 
 class Application:
     def __init__(self, store):
@@ -19,14 +20,18 @@ class Application:
             print(f'Enregistrement impossible : {exc}')
             self.view.pause()
 
-    def pick(self, items, page=0):
+    def pick(self, items, page=0, preview=None):
         start = page * 20
-        for i, label in enumerate(items[start:start + 20], start + 1):
-            print(f'{i:2}  {label}')
+        rows = [f'{i:2}  {label}' for i, label in enumerate(items[start:start + 20], start + 1)]
+        self.view.columns(rows, panel(preview, self.view.color) if preview else ())
+        if preview:
+            print('v + numéro : aperçu à droite (exemple : v2)')
         if len(items) > 20:
             print(f'Page {page + 1}/{(len(items) + 19) // 20} — n : suivante, p : précédente')
         print(' 0  Retour')
         choice = self.view.ask()
+        if choice.startswith('v') and choice[1:].isdecimal() and 1 <= int(choice[1:]) <= len(items):
+            return choice
         if choice in ('n', 'p'):
             return choice
         if choice == '0':
@@ -41,16 +46,17 @@ class Application:
         while True:
             self.view.header(f'Bibliothèque → {tool.category} → {tool.name}')
             path = self.paths[tool.command]
-            print(f'Nom : {tool.name}\nCatégorie : {tool.category}')
-            print(f'Statut : {"Installé" if path else "Absent du PATH"}\nChemin : {path or "—"}')
-            print(f'Description : {tool.description}')
+            details = [f'Nom : {tool.name}', f'Catégorie : {tool.category}',
+                       f'Statut : {"Installé" if path else "Absent du PATH"}',
+                       f'Chemin : {path or "—"}', f'Description : {tool.description}']
             if tool.help_args:
-                print(f'Aide à consulter manuellement : {shlex.quote(path or tool.command)} {tool.help_args}')
+                details.append(f'Aide à consulter manuellement : {shlex.quote(path or tool.command)} {tool.help_args}')
             else:
-                print('Aide : consultez la documentation de cet exécutable ; option inconnue.')
-            print('Usage : défense et laboratoire expressément autorisé.')
-            print(f'Favori : {"Oui" if tool.command in self.store.data["favorites"] else "Non"}')
-            print('\n1  Ajouter/retirer des favoris\n0  Retour')
+                details.append('Aide : consultez la documentation ; option inconnue.')
+            details.extend(['Usage : défense et laboratoire expressément autorisé.',
+                            f'Favori : {"Oui" if tool.command in self.store.data["favorites"] else "Non"}',
+                            '', '1  Ajouter/retirer des favoris', '0  Retour'])
+            self.view.columns(details, panel(tool, self.view.color))
             choice = self.view.ask()
             if choice == '0':
                 return
@@ -59,6 +65,7 @@ class Application:
 
     def tool_list(self, tools, breadcrumb):
         page = 0
+        preview_command = None
         while True:
             visible = [t for t in tools if not self.store.data['installed_only'] or self.paths[t.command]]
             self.view.header(breadcrumb)
@@ -66,7 +73,11 @@ class Application:
                 print('Aucun outil dans cette vue. Vérifiez le filtre dans Paramètres.')
             labels = [f'{t.name} [{"installé" if self.paths[t.command] else "absent"}]'
                       + (' ★' if t.command in self.store.data['favorites'] else '') for t in visible]
-            selection = self.pick(labels, page)
+            preview = next((t for t in visible if t.command == preview_command), visible[page * 20] if visible else None)
+            selection = self.pick(labels, page, preview)
+            if isinstance(selection, str) and selection.startswith('v'):
+                preview_command = visible[int(selection[1:]) - 1].command
+                continue
             if selection in ('n', 'p'):
                 page = min(max(0, page + (1 if selection == 'n' else -1)), max(0, (len(labels) - 1) // 20))
                 continue
@@ -102,6 +113,7 @@ class Application:
                 self.save(lambda: self.store.set(key, not self.store.data[key]))
             elif choice == '3':
                 self.tools, self.paths = installed_catalog()
+                refresh()
 
     def run(self):
         try:

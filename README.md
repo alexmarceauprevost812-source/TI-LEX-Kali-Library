@@ -1,6 +1,6 @@
 # TI-LEX-KALI Library V1
 
-Bibliothèque terminal en français pour Kali Linux : fond noir, menus blancs et logo carré TI-L orange foncé et EX blanc, encadré de barres. Python 3.9+ ; aucune dépendance externe et aucune image nécessaire. Compatible également avec Termux sur Android et Windows natif (outils disponibles selon la plateforme).
+Bibliothèque terminal en français pour Kali Linux : fond noir, menus blancs et logo carré TI-L orange foncé et EX blanc, encadré de barres. Python 3.9+ ; aucune dépendance Python externe ; images facultatives avec Chafa. Compatible également avec Termux sur Android et Windows natif (outils disponibles selon la plateforme).
 
 ## Démarrage
 
@@ -36,7 +36,7 @@ python3 main.py --config-dir /tmp/ti-lex-demo --no-color
 
 ## Cadre d'utilisation
 
-Défense, systèmes possédés et laboratoire expressément autorisé. L'application consulte le système local et le PATH ; elle n'exécute aucun outil du catalogue, n'installe rien et ne lance aucun audit réseau. Elle n'automatise ni vol de cookies/identifiants ni accès à des appareils tiers. Les commandes d'aide sont affichées comme référence, à vérifier dans la documentation propre à chaque outil.
+Défense, systèmes possédés et laboratoire expressément autorisé. L'application consulte le système local et le PATH ; elle n'exécute aucun outil d'audit du catalogue, n'installe rien et ne lance aucun audit réseau. Elle n'automatise ni vol de cookies/identifiants ni accès à des appareils tiers. Les commandes d'aide sont affichées comme référence, à vérifier dans la documentation propre à chaque outil.
 
 ## Architecture et vérification
 
@@ -152,3 +152,33 @@ exécutables accessibles, pas les paquets téléchargés : un fichier non instal
 un alias shell, une application graphique hors PATH ou un programme dans un dossier
 absent du PATH ne sera pas détecté. Pour les exécutables sans fiche détaillée,
 l'application ne suppose pas qu'une option `--help` existe.
+
+
+## Icônes à droite dans le terminal Kali
+
+Pour activer les images, copier-coller :
+
+```sh
+sudo apt update
+sudo apt install -y chafa
+cd ~/TI-LEX-Kali-Library
+git pull --ff-only origin main
+python3 main.py
+```
+
+Agrandir le terminal à **90 colonnes ou plus**. La liste affiche à droite l'icône
+locale du premier outil de la page ; saisir `v` suivi du numéro (exemple `v2`)
+pour changer l'aperçu. La fiche affiche aussi l'icône à droite de ses informations
+et de son menu. Chafa convertit l'image en blocs colorés adaptés au terminal Kali.
+
+Les images viennent des icônes déjà installées dans `/usr/share/icons`,
+`/usr/share/pixmaps` et `~/.local/share/icons`, en recherchant le nom de commande
+ou `kali-` suivi du nom. Ce sont des icônes locales fournies par les paquets ou
+le thème : leur origine officielle n'est pas garantie. Beaucoup de commandes
+n'ont pas de logo. Dans ce cas, ou si Chafa est absent, une vignette textuelle
+remplace l'image. Aucun téléchargement d'image n'est effectué.
+
+Sous 90 colonnes, en sortie redirigée ou sans couleurs, l'interface garde son
+fonctionnement textuel. Chafa est le seul programme externe exécuté pour cette
+fonction ; aucun outil d'audit du catalogue n'est lancé. La détection des icônes
+est actualisée avec **Paramètres → Actualiser la détection du PATH**.

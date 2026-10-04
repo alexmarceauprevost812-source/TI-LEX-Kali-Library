@@ -2,6 +2,8 @@
 import os
 import sys
 import shutil
+import textwrap
+import re
 
 ORANGE = '\033[38;2;210;105;30m'
 WHITE = '\033[97m'
@@ -42,6 +44,31 @@ class View:
         print(logo(self.color, compact))
         print(breadcrumb)
         print('─' * 60)
+
+    def columns(self, left, right=()):
+        width = shutil.get_terminal_size(fallback=(80, 24)).columns
+        if not sys.stdout.isatty() or width < 90 or not right:
+            for line in left:
+                print(line)
+            return
+        left_width = width - 30
+        rows = []
+        for line in left:
+            rows.extend(textwrap.wrap(line, width=left_width, replace_whitespace=False) or [''])
+        for index in range(max(len(rows), len(right))):
+            text = rows[index] if index < len(rows) else ''
+            image = right[index] if index < len(right) else ''
+            # Chafa emits color codes; count only visible characters and cap width.
+            count = 0
+            clipped = ''
+            for part in re.findall(r'\x1b\[[0-9;]*m|[^\x1b]', image):
+                if part.startswith('\x1b'):
+                    clipped += part
+                elif count < 26:
+                    clipped += part
+                    count += 1
+            reset = WHITE + '\033[40m' if self.color else ''
+            print(text.ljust(left_width) + '  | ' + clipped + reset)
 
     def ask(self, prompt='Choix'):
         return input(f'TI-LEX-KALI > {prompt} : ').strip()

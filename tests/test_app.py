@@ -57,6 +57,35 @@ class LibraryTests(unittest.TestCase):
                 self.assertIn('21  20', output.getvalue())
                 self.assertNotIn('41  40', output.getvalue())
 
+    def test_icon_matching_render_failure_and_preview(self):
+        from tilex import icons
+        from tilex.catalog import Tool
+        tool = Tool('Nmap', 'Audit sécurité', 'nmap', 'Test')
+        icons.refresh()
+        with patch('tilex.icons.icon_index', return_value={'kali-nmap': Path('/tmp/nmap.svg')}):
+            self.assertEqual(icons.find_icon('nmap'), Path('/tmp/nmap.svg'))
+        with patch('tilex.icons.shutil.which', return_value='/usr/bin/chafa'), patch('tilex.icons.subprocess.run', side_effect=subprocess.TimeoutExpired('chafa', 3)):
+            self.assertEqual(icons.render_icon(Path('/tmp/nmap.svg')), ())
+        with patch('tilex.icons.find_icon', return_value=None):
+            self.assertIn('Icône locale indisponible', icons.panel(tool, False))
+        with tempfile.TemporaryDirectory() as config:
+            app = Application(Store(config))
+            with patch('builtins.input', return_value='v2'), patch('sys.stdout', new_callable=io.StringIO):
+                self.assertEqual(app.pick(['Nmap', 'Git'], preview=tool), 'v2')
+        icons.refresh()
+
+    def test_side_panel_layout(self):
+        from tilex.ui import View
+        with tempfile.TemporaryDirectory() as config:
+            view = View(Store(config))
+            with patch('sys.stdout', new_callable=io.StringIO) as output, patch('tilex.ui.sys.stdout.isatty', return_value=True), patch('tilex.ui.shutil.get_terminal_size', return_value=os.terminal_size((100, 40))):
+                view.columns(['Menu', '0 Retour'], ['Nmap', '[image]'])
+                self.assertIn('  | Nmap', output.getvalue())
+                self.assertIn('  | [image]', output.getvalue())
+            with patch('sys.stdout', new_callable=io.StringIO) as output:
+                view.columns(['Menu'], ['Image'])
+                self.assertEqual(output.getvalue(), 'Menu\n')
+
     def test_search_accents_and_case(self):
         self.assertTrue(search('DEVELOPPEMENT'))
         self.assertEqual(search('john THE ripper')[0].command, 'john')

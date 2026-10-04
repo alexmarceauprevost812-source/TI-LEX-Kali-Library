@@ -9,7 +9,7 @@ class Store:
         self.directory = Path(directory) if directory else Path(
             os.environ.get('XDG_CONFIG_HOME') or (os.environ.get('APPDATA') if os.name == 'nt' else None) or Path.home() / '.config') / 'ti-lex-kali'
         self.path = self.directory / 'settings.json'
-        self.data = {'favorites': [], 'color': True, 'installed_only': False}
+        self.data = {'favorites': [], 'color': True, 'installed_only': False, 'lab_notes': ''}
         self.warning = None
         try:
             raw = json.loads(self.path.read_text(encoding='utf-8'))
@@ -19,6 +19,9 @@ class Store:
             if not isinstance(favorites, list) or any(not isinstance(x, str) for x in favorites):
                 raise ValueError('Favoris invalides')
             self.data['favorites'] = sorted(set(favorites))
+            if not isinstance(raw.get('lab_notes', ''), str):
+                raise ValueError('Notes invalides')
+            self.data['lab_notes'] = raw.get('lab_notes', '')
             for key in ('color', 'installed_only'):
                 if key in raw and not isinstance(raw[key], bool):
                     raise ValueError('Paramètre invalide')
@@ -27,7 +30,7 @@ class Store:
             pass
         except (OSError, ValueError) as exc:
             self.warning = f'Configuration illisible : {exc}. Valeurs par défaut utilisées.'
-            self.data = {'favorites': [], 'color': True, 'installed_only': False}
+            self.data = {'favorites': [], 'color': True, 'installed_only': False, 'lab_notes': ''}
 
     def set(self, key, value):
         updated = dict(self.data, **{key: value})

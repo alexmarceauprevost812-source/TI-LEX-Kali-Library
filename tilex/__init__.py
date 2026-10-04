@@ -1,2 +1,2 @@
-"""TI-LEX-KALI Library V1."""
-__version__ = '1.0.0'
+"""TI-LEX-KALI Library V3."""
+__version__ = '3.0.0'

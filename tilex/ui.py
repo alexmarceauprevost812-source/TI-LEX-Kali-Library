@@ -3,8 +3,7 @@ import os
 import sys
 import shutil
 
-LOGO = r'''
- _______ ___       ___     _______ __   __       ___   _ _______ ___     ___
+LOGO = r''' _______ ___       ___     _______ __   __       ___   _ _______ ___     ___
 |       |   |     |   |   |       |  |_|  |     |   | | |   _   |   |   |   |
 |_     _|   |_____|   |   |    ___|       |_____|   |_| |  |_|  |   |   |   |
   |   | |   |_____|   |   |   |___|       |_____|      _|       |   |   |   |
@@ -23,8 +22,8 @@ class View:
 
     def header(self, breadcrumb):
         if self.color:
-            print('\033[0m\033[2J\033[H\033[38;2;190;255;0m\033[40m', end='')
-        print(LOGO if self.color or not sys.stdout.isatty() or shutil.get_terminal_size(fallback=(80, 24)).columns >= 80 else '\nTI-LEX-KALI / LIBRARY V1')
+            print('\033[0m\033[2J\033[H\033[97m\033[40m', end='')
+        print(LOGO if not sys.stdout.isatty() or shutil.get_terminal_size(fallback=(80, 24)).columns >= 80 else 'TI-LEX-KALI / LIBRARY V1')
         print(breadcrumb)
         print('─' * 60)
 

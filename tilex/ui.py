@@ -3,14 +3,29 @@ import os
 import sys
 import shutil
 
-LOGO = '''================================================
-|  ███████ ██       ██      ███████ ██   ██    |
-|     ██   ██       ██      ██       ██ ██     |
-|     ██   ██ █████ ██      █████     ███      |
-|     ██   ██       ██      ██       ██ ██     |
-|     ██   ██       ███████ ███████ ██   ██    |
-|            TI-LEX-KALI · LIBRARY V1           |
-================================================'''
+ORANGE = '\033[38;2;210;105;30m'
+WHITE = '\033[97m'
+BAR = '=' * 48
+LOGO_ROWS = (
+    ('███████ ██       ██     ', '███████ ██   ██'),
+    ('   ██   ██       ██     ', '██       ██ ██ '),
+    ('   ██   ██ █████ ██     ', '█████     ███  '),
+    ('   ██   ██       ██     ', '██       ██ ██ '),
+    ('   ██   ██       ███████', '███████ ██   ██'),
+)
+
+def logo(colored=False, compact=False):
+    orange, white = (ORANGE, WHITE) if colored else ('', '')
+    if compact:
+        return f'{white}| {orange}TI-L{white}EX | TI-LEX-KALI / LIBRARY V1 |'
+    lines = [white + BAR]
+    for left, right in LOGO_ROWS:
+        lines.append(f'{white}|  {orange}{left} {white}{right}    |')
+    lines.append(f'{white}|            {orange}TI-L{white}EX-KALI · LIBRARY V1           |')
+    lines.append(white + BAR)
+    return '\n'.join(lines)
+
+LOGO = logo()
 
 class View:
     def __init__(self, store):
@@ -23,11 +38,8 @@ class View:
     def header(self, breadcrumb):
         if self.color:
             print('\033[0m\033[2J\033[H\033[97m\033[40m', end='')
-        if self.color:
-            print('\033[91m', end='')
-        print(LOGO if not sys.stdout.isatty() or shutil.get_terminal_size(fallback=(80, 24)).columns >= 48 else '| TI-LEX | TI-LEX-KALI / LIBRARY V1 |')
-        if self.color:
-            print('\033[97m', end='')
+        compact = sys.stdout.isatty() and shutil.get_terminal_size(fallback=(80, 24)).columns < 48
+        print(logo(self.color, compact))
         print(breadcrumb)
         print('─' * 60)
 

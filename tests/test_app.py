@@ -123,6 +123,27 @@ class LibraryTests(unittest.TestCase):
                 app.tool_manual(tool)
                 self.assertIn('Choisit les ports.', output.getvalue())
 
+    def test_sixteen_categories_and_explicit_classification(self):
+        from tilex.catalog import CATEGORIES, category_for
+        self.assertEqual(len(CATEGORIES), 16)
+        self.assertEqual(len(set(CATEGORIES)), 16)
+        for command, index in (('nmap', 4), ('clamscan', 9), ('journalctl', 11),
+                               ('iw', 2), ('sqlite3', 13), ('rsync', 14), ('git', 12)):
+            self.assertEqual(category_for(command), CATEGORIES[index])
+        self.assertEqual(category_for('not-nmap-or-git'), CATEGORIES[15])
+        self.assertTrue(all(tool.category in CATEGORIES for tool in TOOLS))
+
+    def test_classified_extra_installed_tool(self):
+        with tempfile.TemporaryDirectory() as folder:
+            executable = Path(folder) / ('sqlite3.exe' if os.name == 'nt' else 'sqlite3')
+            executable.write_text('test')
+            executable.chmod(0o755)
+            with patch.dict(os.environ, {'PATH': folder}):
+                tools, paths = installed_catalog()
+            tool = next(t for t in tools if t.command == executable.name)
+            self.assertEqual(tool.category, 'Bases de données')
+            self.assertEqual(paths[tool.command], str(executable))
+
     def test_search_accents_and_case(self):
         self.assertTrue(search('DEVELOPPEMENT'))
         self.assertEqual(search('john THE ripper')[0].command, 'john')
@@ -164,7 +185,7 @@ class LibraryTests(unittest.TestCase):
             process = subprocess.run([sys.executable, 'main.py', '--no-color', '--config-dir', folder],
                                      cwd=ROOT, input=sequence, capture_output=True, text=True, timeout=10)
             self.assertEqual(process.returncode, 0, process.stderr)
-            self.assertIn('Bibliothèque → Réseau → ip', process.stdout)
+            self.assertIn('Bibliothèque → Réseau et connexions → ip', process.stdout)
             self.assertIn('Chemin :', process.stdout)
             self.assertIn('Kali détecté', process.stdout)
             self.assertNotIn('\033[', process.stdout)

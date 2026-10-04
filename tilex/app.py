@@ -30,7 +30,7 @@ class Application:
             print('v + numéro : aperçu à droite (exemple : v2)')
         if len(items) > 20:
             print(f'Page {page + 1}/{(len(items) + 19) // 20} — n : suivante, p : précédente')
-        print(' 0  Retour')
+        print(self.view.numbered(' 0  Retour'))
         choice = self.view.ask()
         if choice.startswith('v') and choice[1:].isdecimal() and 1 <= int(choice[1:]) <= len(items):
             return choice
@@ -143,7 +143,7 @@ class Application:
     def categories(self, root):
         while True:
             self.view.header(f'{root} → Catégories')
-            categories = CATEGORIES + (INSTALLED_CATEGORY, 'Tous les outils installés')
+            categories = CATEGORIES + ('Tous les outils installés',)
             selection = self.pick([f'{cat} ({sum(bool(self.paths[t.command]) for t in self.tools if t.category == cat)} installés)'
                                    for cat in categories[:-1]] + [f'Tous les outils installés ({sum(bool(p) for p in self.paths.values())})'])
             if selection is None:
@@ -177,7 +177,7 @@ class Application:
                 self.view.pause()
             while True:
                 self.view.header('Menu principal')
-                print('1  Bibliothèque des outils\n2  Catégories\n3  Rechercher un outil\n4  Favoris\n5  Informations système\n6  Paramètres\n0  Quitter')
+                self.view.columns(['1  Bibliothèque des outils', '2  Catégories', '3  Rechercher un outil', '4  Favoris', '5  Informations système', '6  Paramètres', '0  Quitter'])
                 choice = self.view.ask()
                 if choice == '0':
                     break

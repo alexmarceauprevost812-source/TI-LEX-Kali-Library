@@ -7,6 +7,7 @@ import re
 
 ORANGE = '\033[38;2;210;105;30m'
 WHITE = '\033[97m'
+DARK_RED = '\033[38;2;180;35;35m'
 BAR = '=' * 48
 LOGO_ROWS = (
     ('███████ ██       ██     ', '███████ ██   ██'),
@@ -45,11 +46,18 @@ class View:
         print(breadcrumb)
         print('─' * 60)
 
+    def numbered(self, line):
+        if self.color:
+            return re.sub(r'^(\s*)(\d+)(?=\s)',
+                          lambda match: match[1] + DARK_RED + match[2] + WHITE,
+                          line, count=1)
+        return line
+
     def columns(self, left, right=()):
         width = shutil.get_terminal_size(fallback=(80, 24)).columns
         if not sys.stdout.isatty() or width < 90 or not right:
             for line in left:
-                print(line)
+                print(self.numbered(line))
             return
         left_width = width - 30
         rows = []
@@ -68,7 +76,7 @@ class View:
                     clipped += part
                     count += 1
             reset = WHITE + '\033[40m' if self.color else ''
-            print(text.ljust(left_width) + '  | ' + clipped + reset)
+            print(self.numbered(text.ljust(left_width)) + '  | ' + clipped + reset)
 
     def guide_table(self, examples):
         width = shutil.get_terminal_size(fallback=(80, 24)).columns

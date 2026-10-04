@@ -12,8 +12,45 @@ class Tool:
     description: str
     help_args: str = '--help'
 
-CATEGORIES = ('Réseau', 'Système', 'Web', 'Analyse réseau', 'Audit sécurité',
-              'Audit de mots de passe de laboratoire', 'Forensique', 'Développement')
+CATEGORIES = (
+    'Réseau et connexions', 'Analyse du trafic réseau',
+    'Wi-Fi — laboratoire autorisé', 'Sites et applications web',
+    'Inventaire des ports et services', 'Audit des vulnérabilités',
+    'Mots de passe — laboratoire autorisé', 'Forensique et preuves numériques',
+    'Fichiers et métadonnées', 'Analyse de logiciels malveillants',
+    'Système et performances', 'Journaux et surveillance',
+    'Développement et programmation', 'Bases de données',
+    'Sauvegarde et récupération', 'Autres outils installés',
+)
+INSTALLED_CATEGORY = CATEGORIES[-1]
+# Explicit command identities, never substring guesses.
+CATEGORY_COMMANDS = (
+    'ip ss dig ping traceroute tracepath host nslookup mtr netstat nmcli nmtui ethtool arp route',
+    'wireshark tshark tcpdump dumpcap capinfos editcap mergecap ngrep',
+    'iw iwconfig iwlist rfkill aircrack-ng airmon-ng airodump-ng kismet wavemon',
+    'curl wget nikto whatweb burpsuite zaproxy wpscan',
+    'nmap zenmap masscan',
+    'lynis gvm gvm-check-setup openvas',
+    'john hashcat hashcat-utils',
+    'autopsy fls mmls icat istat fsstat tsk_recover binwalk bulk_extractor',
+    'exiftool file strings xxd hexdump stat identify pdfinfo',
+    'clamscan clamav freshclam clamdscan yara yarac',
+    'htop top btop systemctl lsblk free df du lscpu lspci lsusb uname ps uptime',
+    'journalctl dmesg last lastlog logwatch tail',
+    'python python3 pip pip3 git gcc g++ make cmake node npm go rustc cargo ruby perl javac java gdb strace ltrace',
+    'sqlite3 psql mysql mariadb redis-cli mongosh',
+    'rsync tar gzip gunzip bzip2 bunzip2 xz unxz zip unzip 7z testdisk photorec dd ddrescue',
+)
+COMMAND_CATEGORY = {command: CATEGORIES[index]
+                    for index, commands in enumerate(CATEGORY_COMMANDS)
+                    for command in commands.split()}
+
+def category_for(command):
+    name = command.casefold()
+    if os.name == 'nt' and name.endswith('.exe'):
+        name = name[:-4]
+    return COMMAND_CATEGORY.get(name, INSTALLED_CATEGORY)
+
 _DATA = (
     ('ip', 0, 'ip', 'Interfaces, adresses et routes locales.'),
     ('ss', 0, 'ss', 'Sockets et connexions locales.'),
@@ -43,7 +80,7 @@ _DATA = (
     ('GCC', 7, 'gcc', 'Compilation C et C++.'),
     ('Make', 7, 'make', 'Orchestration de constructions locales.'),
 )
-TOOLS = tuple(Tool(name, CATEGORIES[cat], cmd, desc) for name, cat, cmd, desc in _DATA)
+TOOLS = tuple(Tool(name, category_for(cmd), cmd, desc) for name, cat, cmd, desc in _DATA)
 
 def discover():
     return {tool.command: shutil.which(tool.command) for tool in TOOLS}
@@ -58,7 +95,6 @@ def search(query, tools=TOOLS):
         f'{t.name} {t.command} {t.category} {t.description}')]
 
 
-INSTALLED_CATEGORY = 'Autres outils installés'
 
 def installed_catalog():
     """Enumerate executable PATH entries without running any command.
@@ -88,8 +124,10 @@ def installed_catalog():
                         continue
         except OSError:
             continue
-    additional = [Tool(name, INSTALLED_CATEGORY, name,
-                       'Exécutable détecté dans le PATH local. Description non renseignée.', '')
+    additional = [Tool(name, category_for(name), name,
+                       ('Exécutable détecté dans le PATH local. Description non renseignée.'
+                        if category_for(name) == INSTALLED_CATEGORY else
+                        'Commande identifiée : ' + category_for(name) + '. Consultez son guide ou son manuel.'), '')
                   for name in paths if paths[name] and name not in known]
     tools = tuple(TOOLS) + tuple(sorted(additional, key=lambda t: t.name.casefold()))
     return tools, paths

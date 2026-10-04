@@ -20,7 +20,7 @@ Menu : **1 Bibliothèque des outils**, **2 Catégories**, **3 Rechercher un outi
 
 Saisir un numéro puis Entrée ; `0` revient au niveau précédent. Bibliothèque → catégorie → liste → fiche outil. Chaque fiche présente nom, catégorie, statut, chemin détecté, description et commande d'aide à consulter manuellement. `1` dans une fiche ajoute ou retire le favori. Ctrl+C et fin d'entrée quittent proprement.
 
-27 outils disposent de fiches détaillées dans huit catégories : réseau, système, web, analyse réseau, audit sécurité, audit de mots de passe de laboratoire, forensique et développement. La recherche couvre les noms, commandes, catégories et descriptions, sans distinction de casse ou d'accents.
+27 outils disposent de fiches détaillées dans les 16 catégories du catalogue décrites ci-dessous. La recherche couvre les noms, commandes, catégories et descriptions, sans distinction de casse ou d'accents.
 
 Les statuts reposent uniquement sur `shutil.which` et le `PATH` courant : « absent » signifie introuvable dans ce PATH. Cela ne prouve ni l'absence de tout paquet ni le fonctionnement de l'outil. Le catalogue détaillé est complété automatiquement par les exécutables disponibles dans le PATH. Les alias shell ne sont pas détectés. Paramètres permet d'actualiser la détection et de filtrer les outils installés. La distribution Kali est identifiée via `/etc/os-release`.
 
@@ -136,10 +136,10 @@ Puis relancer avec `python3 main.py` (Kali), `python main.py` (Termux) ou `py -3
 
 ## Tous les outils déjà installés
 
-Ouvrir **1 Bibliothèque des outils**, puis **10 Tous les outils installés**.
+Ouvrir **1 Bibliothèque des outils**, puis **17 Tous les outils installés**.
 La détection parcourt les dossiers du PATH sans exécuter les outils. Les commandes
 connues conservent leur catégorie et leur description ; les autres apparaissent
-également dans **9 Autres outils installés**, avec leur chemin et une fiche générique.
+également dans **16 Autres outils installés**, avec leur chemin et une fiche générique.
 Toutes ces commandes sont recherchables et peuvent être ajoutées aux favoris.
 
 Les listes affichent 20 résultats par page : saisir `n` pour la suivante, `p` pour
@@ -234,3 +234,39 @@ des options d'une version, ni d'une traduction automatique de tous les outils.
 
 Seul `man` est exécuté pour lire la documentation, jamais l'outil sélectionné.
 Source du fonctionnement des langues : https://man7.org/linux/man-pages/man1/man.1.html.
+
+
+## Catalogue en 16 catégories
+
+Dans **Bibliothèque** ou **Catégories**, choisir le numéro :
+
+| Nº | Catégorie |
+|---|---|
+| 1 | Réseau et connexions |
+| 2 | Analyse du trafic réseau |
+| 3 | Wi-Fi — laboratoire autorisé |
+| 4 | Sites et applications web |
+| 5 | Inventaire des ports et services |
+| 6 | Audit des vulnérabilités |
+| 7 | Mots de passe — laboratoire autorisé |
+| 8 | Forensique et preuves numériques |
+| 9 | Fichiers et métadonnées |
+| 10 | Analyse de logiciels malveillants |
+| 11 | Système et performances |
+| 12 | Journaux et surveillance |
+| 13 | Développement et programmation |
+| 14 | Bases de données |
+| 15 | Sauvegarde et récupération |
+| 16 | Autres outils installés |
+
+**17 Tous les outils installés** donne accès à l'inventaire global.
+Le compteur de chaque catégorie indique combien de ses commandes sont installées.
+Les commandes reconnues par leur nom exact sont classées automatiquement, y compris
+hors des 27 fiches détaillées : par exemple `iw` en Wi-Fi, `sqlite3` en bases de
+données et `rsync` en sauvegarde. Les commandes inconnues restent en catégorie 16,
+sans classement inventé. Une catégorie peut être vide sur votre machine.
+
+Parcours : **catégorie → outil → fiche avec icône disponible → guide et options**.
+La recherche et les favoris restent accessibles depuis le menu principal.
+
+Les numéros de sélection des menus, catégories et outils sont en rouge foncé dans les terminaux avec couleurs ; les noms restent blancs.

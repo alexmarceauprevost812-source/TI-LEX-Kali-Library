@@ -55,7 +55,9 @@ class Application:
                 details.append(f'Aide à consulter manuellement : {shlex.quote(path or tool.command)} {tool.help_args}')
             else:
                 details.append('Aide : consultez la documentation ; option inconnue.')
-            details.extend(['Usage : défense et laboratoire expressément autorisé.',
+            details.extend(['LAB — appareils personnels ou expressément autorisés.',
+                            'IP / MAC : identifiants réseau, pas une preuve de propriété.',
+                            'Vérifiez l’appareil et votre autorisation avant toute action.',
                             f'Favori : {"Oui" if tool.command in self.store.data["favorites"] else "Non"}',
                             '', '1  Ajouter/retirer des favoris', '2  Commandes et guide en français', '3  Toutes les options documentées', '4  Manuel complet', '0  Retour'])
             self.view.columns(details, panel(tool, self.view.color))
@@ -125,7 +127,8 @@ class Application:
             self.view.header(breadcrumb)
             if not visible:
                 print('Aucun outil dans cette vue. Vérifiez le filtre dans Paramètres.')
-            labels = [f'{t.name} [{"installé" if self.paths[t.command] else "absent"}]'
+            print('LAB = utilisation sur vos appareils ou dans un laboratoire autorisé.')
+            labels = [f'{t.name} [LAB] [{"installé" if self.paths[t.command] else "absent"}]'
                       + (' ★' if t.command in self.store.data['favorites'] else '') for t in visible]
             preview = next((t for t in visible if t.command == preview_command), visible[page * 20] if visible else None)
             selection = self.pick(labels, page, preview)

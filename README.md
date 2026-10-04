@@ -270,3 +270,24 @@ Parcours : **catégorie → outil → fiche avec icône disponible → guide et 
 La recherche et les favoris restent accessibles depuis le menu principal.
 
 Les numéros de sélection des menus, catégories et outils sont en rouge foncé dans les terminaux avec couleurs ; les noms restent blancs.
+
+
+## Mention LAB et identification de vos appareils
+
+Chaque outil porte **[LAB]** dans les listes. Cela indique le cadre d’utilisation
+sur vos appareils personnels ou un laboratoire expressément autorisé ; ce n’est
+ni une certification de sécurité de l’outil ni une confirmation automatique de
+la propriété d’une cible. Les fiches et guides rappellent ce cadre.
+
+Sur votre propre Kali, consulter les IP et les MAC locales :
+
+```sh
+ip address show
+ip link show
+```
+
+Pour un autre appareil personnel, relever l’IP et la MAC dans ses paramètres
+réseau et vérifier qu’il s’agit bien de l’appareil prévu. Une adresse IP ou MAC
+ne prouve pas la propriété ni l’autorisation ; les MAC peuvent être aléatoires
+ou modifiées et ne traversent pas les routeurs. Aucun mécanisme de validation
+de propriété ou de lancement d’audit n’est ajouté par cette mention.

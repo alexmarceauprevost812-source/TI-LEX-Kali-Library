@@ -55,7 +55,11 @@ def guide(command):
     return ((f'man -- {shlex.quote(command)}',
              'Consulte le manuel local si man et cette page sont disponibles. Aucun guide spécifique n’est encore rédigé pour cet outil.'),)
 
-NOTES = ('Référence à copier manuellement : aucune commande n’est exécutée ici.',
+NOTES = ('LAB : utilisez ces exemples uniquement sur vos appareils ou avec une autorisation explicite.',
+         'IP et MAC identifient une interface ; elles ne confirment pas la propriété ou l’autorisation.',
+         'Sur Kali, ip address show affiche vos IP et ip link show affiche les MAC de vos interfaces locales.',
+         'Pour un autre de vos appareils, vérifiez ses adresses dans ses paramètres réseau. Une MAC peut changer et n’est pas visible au-delà du réseau local.',
+         'Référence à copier manuellement : aucune commande n’est exécutée ici.',
          'Les noms fichier-labo.txt, capture-labo.pcap, image-labo.dd et exemple.c sont à remplacer par vos fichiers existants.',
          'Les exemples réseau ciblent seulement 127.0.0.1. Un serveur local doit être démarré pour les exemples web.',
          'Les options peuvent varier selon la version et la plateforme ; vérifiez l’aide locale.')
